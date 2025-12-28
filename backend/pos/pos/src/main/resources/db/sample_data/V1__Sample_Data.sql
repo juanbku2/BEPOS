@@ -1,8 +1,8 @@
 -- Insert Users (password is 'password' hashed with BCrypt)
 -- Note: You should use a secure way to handle passwords in a real application
-INSERT INTO users (first_name, last_name, email, password, role) VALUES
-('Admin', 'User', 'admin@bepos.mx', '$2a$10$9/d6pX.B.gL4s5Z1S5c3A.GTVt.n4b.Y.x1.J/Z5.c3.a5a1.A/3.', 'ADMIN'),
-('Cashier', 'User', 'cashier@bepos.mx', '$2a$10$9/d6pX.B.gL4s5Z1S5c3A.GTVt.n4b.Y.x1.J/Z5.c3.a5a1.A/3.', 'CASHIER');
+INSERT INTO users (username, first_name, last_name, email, password, role) VALUES
+('admin', 'Admin', 'User', 'admin@bepos.mx', '$2a$10$9/d6pX.B.gL4s5Z1S5c3A.GTVt.n4b.Y.x1.J/Z5.c3.a5a1.A/3.', 'ADMIN'),
+('cashier','Cashier', 'User', 'cashier@bepos.mx', '$2a$10$9/d6pX.B.gL4s5Z1S5c3A.GTVt.n4b.Y.x1.J/Z5.c3.a5a1.A/3.', 'CASHIER');
 
 -- Insert Suppliers
 INSERT INTO suppliers (name, contact_name, phone, category) VALUES
