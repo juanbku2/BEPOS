@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Node / React
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env
+
+# Java / Spring Boot
+backend/target/
+backend/.mvn/
+backend/.env
+backend/*.log
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Database
+database/data/
+database/*.sql
