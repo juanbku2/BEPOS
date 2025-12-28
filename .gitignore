@@ -5,14 +5,26 @@ Thumbs.db
 # Node / React
 frontend/node_modules/
 frontend/build/
-frontend/dist/
-frontend/.env
+frontend/.pnp
+frontend/.pnp.js
+frontend/coverage/
+frontend/.DS_Store
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
 # Java / Spring Boot
 backend/target/
 backend/.mvn/
 backend/.env
 backend/*.log
+backend/*.jar
+backend/*.war
+backend/*.zip
+backend/.factorypath
+backend/.project
+backend/.settings/
+backend/.classpath
 
 # IDEs
 .idea/
@@ -22,3 +34,8 @@ backend/*.log
 # Database
 database/data/
 database/*.sql
+.env
+.idea/
+.vscode/
+*.swp
+*.log

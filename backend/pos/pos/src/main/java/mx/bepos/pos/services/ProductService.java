@@ -1,0 +1,42 @@
+package mx.bepos.pos.services;
+
+import lombok.RequiredArgsConstructor;
+import mx.bepos.pos.domain.Product;
+import mx.bepos.pos.domain.repositories.ProductRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class ProductService {
+
+    private final ProductRepository productRepository;
+
+    @Transactional(readOnly = true)
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Product> getProductById(Integer id) {
+        return productRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Product> getProductByBarcode(String barcode) {
+        return productRepository.findByBarcode(barcode);
+    }
+
+    @Transactional
+    public Product saveProduct(Product product) {
+        return productRepository.save(product);
+    }
+
+    @Transactional
+    public void deleteProduct(Integer id) {
+        productRepository.deleteById(id);
+    }
+}
