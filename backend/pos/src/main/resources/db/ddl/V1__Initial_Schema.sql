@@ -66,3 +66,6 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(255)
 );
+
+INSERT INTO users (username, first_name, last_name, email, password, role) VALUES
+('admin', 'Admin', 'User', 'admin@bepos.mx', '$2a$10$PeiphQ52x/I.LvddjTC6QO6sGWO.5ORwMnq6dlQRGvql9y.GKjcVy', 'ADMIN');
