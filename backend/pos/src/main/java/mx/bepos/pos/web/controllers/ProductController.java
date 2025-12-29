@@ -44,7 +44,6 @@ public class ProductController {
         return productService.getProductById(id)
                 .map(product -> {
                     product.setName(productDetails.getName());
-                    product.setBrand(productDetails.getBrand());
                     product.setPurchasePrice(productDetails.getPurchasePrice());
                     product.setSalePrice(productDetails.getSalePrice());
                     product.setStockQuantity(productDetails.getStockQuantity());
