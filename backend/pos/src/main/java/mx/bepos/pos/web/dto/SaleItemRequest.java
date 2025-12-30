@@ -8,4 +8,5 @@ import java.math.BigDecimal;
 public class SaleItemRequest {
     private Integer productId;
     private BigDecimal quantity;
+    private BigDecimal price;
 }

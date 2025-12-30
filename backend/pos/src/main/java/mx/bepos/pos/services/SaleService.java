@@ -4,6 +4,10 @@ import lombok.RequiredArgsConstructor;
 import mx.bepos.pos.domain.*;
 import mx.bepos.pos.domain.repositories.*;
 import mx.bepos.pos.web.dto.SaleRequest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +25,19 @@ public class SaleService {
     private final CustomerRepository customerRepository;
     private final CreditHistoryRepository creditHistoryRepository;
 
+    @Transactional(readOnly = true)
+    public List<Sale> getLastSales(int limit) {
+        Pageable pageable = PageRequest.of(0, limit, Sort.by("saleDate").descending());
+        return saleRepository.findAll(pageable).getContent();
+    }
+
     @Transactional
     public Sale createSale(SaleRequest saleRequest) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
         Sale sale = new Sale();
         sale.setPaymentMethod(saleRequest.getPaymentMethod());
+        sale.setUser(user);
 
         if (saleRequest.getCustomerId() != null) {
             Customer customer = customerRepository.findById(saleRequest.getCustomerId())
@@ -49,8 +62,8 @@ public class SaleService {
             SaleItem saleItem = new SaleItem();
             saleItem.setProduct(product);
             saleItem.setQuantity(itemRequest.getQuantity());
-            saleItem.setUnitPrice(product.getSalePrice());
-            saleItem.setTotalPrice(product.getSalePrice().multiply(itemRequest.getQuantity()));
+            saleItem.setUnitPrice(itemRequest.getPrice());
+            saleItem.setTotalPrice(itemRequest.getPrice().multiply(itemRequest.getQuantity()));
             saleItem.setSale(sale);
 
             saleItems.add(saleItem);

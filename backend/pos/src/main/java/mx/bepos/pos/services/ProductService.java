@@ -3,6 +3,7 @@ package mx.bepos.pos.services;
 import lombok.RequiredArgsConstructor;
 import mx.bepos.pos.domain.Product;
 import mx.bepos.pos.domain.repositories.ProductRepository;
+import mx.bepos.pos.domain.repositories.SupplierRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,10 +15,16 @@ import java.util.Optional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final SupplierRepository supplierRepository;
 
     @Transactional(readOnly = true)
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Product> getProductsByName(String name) {
+        return productRepository.findByNameContainingIgnoreCase(name);
     }
 
     @Transactional(readOnly = true)
@@ -32,6 +39,10 @@ public class ProductService {
 
     @Transactional
     public Product saveProduct(Product product) {
+        if (product.getSupplier() != null && product.getSupplier().getId() != null) {
+            supplierRepository.findById(product.getSupplier().getId())
+                    .ifPresent(product::setSupplier);
+        }
         return productRepository.save(product);
     }
 
