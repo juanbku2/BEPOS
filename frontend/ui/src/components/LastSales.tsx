@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Table } from 'react-bootstrap';
 import axios from '../api/axios';
 import { Sale } from '../types/Sale';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const LastSales = () => {
+  const { t } = useTranslation(); // Initialize useTranslation
   const [sales, setSales] = useState<Sale[]>([]);
 
   useEffect(() => {
@@ -18,15 +20,15 @@ const LastSales = () => {
 
   return (
     <div>
-      <h2>Last 10 Sales</h2>
+      <h2>{t('lastSales.title')}</h2> {/* Translate title */}
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Customer</th>
-            <th>User</th>
-            <th>Total</th>
-            <th>Date</th>
+            <th>{t('lastSales.idHeader')}</th> {/* Translate ID */}
+            <th>{t('lastSales.customerHeader')}</th> {/* Translate Customer */}
+            <th>{t('lastSales.userHeader')}</th> {/* Translate User */}
+            <th>{t('lastSales.totalHeader')}</th> {/* Translate Total */}
+            <th>{t('lastSales.dateHeader')}</th> {/* Translate Date */}
           </tr>
         </thead>
         <tbody>

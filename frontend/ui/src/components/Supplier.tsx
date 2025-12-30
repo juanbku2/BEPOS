@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form } from 'react-bootstrap';
 import axios from '../api/axios';
 import { Supplier } from '../types/Supplier';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const SupplierComponent = () => {
+  const { t } = useTranslation(); // Initialize useTranslation
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
@@ -64,16 +66,16 @@ const SupplierComponent = () => {
   return (
     <div>
       <Button variant="primary" onClick={handleNew} className="mb-3">
-        New Supplier
+        {t('supplier.newSupplier')} {/* Translate New Supplier */}
       </Button>
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Contact Name</th>
-            <th>Phone</th>
-            <th>Category</th>
-            <th>Actions</th>
+            <th>{t('supplier.nameHeader')}</th> {/* Translate Name */}
+            <th>{t('supplier.contactNameHeader')}</th> {/* Translate Contact Name */}
+            <th>{t('supplier.phoneHeader')}</th> {/* Translate Phone */}
+            <th>{t('supplier.categoryHeader')}</th> {/* Translate Category */}
+            <th>{t('supplier.actionsHeader')}</th> {/* Translate Actions */}
           </tr>
         </thead>
         <tbody>
@@ -85,10 +87,10 @@ const SupplierComponent = () => {
               <td>{supplier.category}</td>
               <td>
                 <Button variant="warning" onClick={() => handleEdit(supplier)} className="me-2">
-                  Edit
+                  {t('supplier.editButton')} {/* Translate Edit */}
                 </Button>
                 <Button variant="danger" onClick={() => handleDelete(supplier.id)}>
-                  Delete
+                  {t('supplier.deleteButton')} {/* Translate Delete */}
                 </Button>
               </td>
             </tr>
@@ -98,34 +100,34 @@ const SupplierComponent = () => {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{form.id ? 'Edit' : 'New'} Supplier</Modal.Title>
+          <Modal.Title>{t(form.id ? 'supplier.editSupplier' : 'supplier.newSupplier')}</Modal.Title> {/* Translate Edit/New Supplier */}
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group>
-              <Form.Label>Name</Form.Label>
+              <Form.Label>{t('supplier.nameLabel')}</Form.Label> {/* Translate Name */}
               <Form.Control type="text" name="name" value={form.name} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>Contact Name</Form.Label>
+              <Form.Label>{t('supplier.contactNameLabel')}</Form.Label> {/* Translate Contact Name */}
               <Form.Control type="text" name="contactName" value={form.contactName} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>Phone</Form.Label>
+              <Form.Label>{t('supplier.phoneLabel')}</Form.Label> {/* Translate Phone */}
               <Form.Control type="text" name="phone" value={form.phone} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>Category</Form.Label>
+              <Form.Label>{t('supplier.categoryLabel')}</Form.Label> {/* Translate Category */}
               <Form.Control type="text" name="category" value={form.category} onChange={handleInputChange} />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
+            {t('supplier.closeButton')} {/* Translate Close */}
           </Button>
           <Button variant="primary" onClick={handleSave}>
-            Save Changes
+            {t('supplier.saveChangesButton')} {/* Translate Save Changes */}
           </Button>
         </Modal.Footer>
       </Modal>

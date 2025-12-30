@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form } from 'react-bootstrap';
 import axios from '../api/axios';
 import { Customer } from '../types/Customer';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const CustomerComponent = () => {
+  const { t } = useTranslation(); // Initialize useTranslation
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<Customer>({ id: 0, fullName: '', phone: '', currentDebt: 0 });
@@ -68,15 +70,15 @@ const CustomerComponent = () => {
   return (
     <div>
       <Button variant="primary" onClick={handleNew} className="mb-3">
-        New Customer
+        {t('customer.newCustomer')} {/* Translate New Customer */}
       </Button>
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>Full Name</th>
-            <th>Phone</th>
-            <th>Current Debt</th>
-            <th>Actions</th>
+            <th>{t('customer.fullNameHeader')}</th> {/* Translate Full Name */}
+            <th>{t('customer.phoneHeader')}</th> {/* Translate Phone */}
+            <th>{t('customer.currentDebtHeader')}</th> {/* Translate Current Debt */}
+            <th>{t('customer.actionsHeader')}</th> {/* Translate Actions */}
           </tr>
         </thead>
         <tbody>
@@ -87,10 +89,10 @@ const CustomerComponent = () => {
               <td>${customer.currentDebt.toFixed(2)}</td>
               <td>
                 <Button variant="warning" onClick={() => handleEdit(customer)} className="me-2">
-                  Edit
+                  {t('customer.editButton')} {/* Translate Edit */}
                 </Button>
                 <Button variant="danger" onClick={() => handleDelete(customer.id)}>
-                  Delete
+                  {t('customer.deleteButton')} {/* Translate Delete */}
                 </Button>
               </td>
             </tr>
@@ -100,30 +102,30 @@ const CustomerComponent = () => {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{form.id ? 'Edit' : 'New'} Customer</Modal.Title>
+          <Modal.Title>{t(form.id ? 'customer.editCustomer' : 'customer.newCustomer')}</Modal.Title> {/* Translate Edit/New Customer */}
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group>
-              <Form.Label>Full Name</Form.Label>
+              <Form.Label>{t('customer.fullNameLabel')}</Form.Label> {/* Translate Full Name */}
               <Form.Control type="text" name="fullName" value={form.fullName} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>Phone</Form.Label>
+              <Form.Label>{t('customer.phoneLabel')}</Form.Label> {/* Translate Phone */}
               <Form.Control type="text" name="phone" value={form.phone} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>Current Debt</Form.Label>
+              <Form.Label>{t('customer.currentDebtLabel')}</Form.Label> {/* Translate Current Debt */}
               <Form.Control type="number" name="currentDebt" value={form.currentDebt} onChange={handleInputChange} />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
+            {t('customer.closeButton')} {/* Translate Close */}
           </Button>
           <Button variant="primary" onClick={handleSave}>
-            Save Changes
+            {t('customer.saveChangesButton')} {/* Translate Save Changes */}
           </Button>
         </Modal.Footer>
       </Modal>

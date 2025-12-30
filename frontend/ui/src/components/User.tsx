@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form } from 'react-bootstrap';
 import axios from '../api/axios';
 import { User } from '../types/User';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const UserComponent = () => {
+  const { t } = useTranslation(); // Initialize useTranslation
   const [users, setUsers] = useState<User[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
@@ -80,17 +82,17 @@ const UserComponent = () => {
   return (
     <div>
       <Button variant="primary" onClick={handleNew} className="mb-3">
-        New User
+        {t('user.newUser')} {/* Translate New User */}
       </Button>
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>Username</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Actions</th>
+            <th>{t('user.usernameHeader')}</th> {/* Translate Username */}
+            <th>{t('user.firstNameHeader')}</th> {/* Translate First Name */}
+            <th>{t('user.lastNameHeader')}</th> {/* Translate Last Name */}
+            <th>{t('user.emailHeader')}</th> {/* Translate Email */}
+            <th>{t('user.roleHeader')}</th> {/* Translate Role */}
+            <th>{t('user.actionsHeader')}</th> {/* Translate Actions */}
           </tr>
         </thead>
         <tbody>
@@ -103,10 +105,10 @@ const UserComponent = () => {
               <td>{user.role}</td>
               <td>
                 <Button variant="warning" onClick={() => handleEdit(user)} className="me-2">
-                  Edit
+                  {t('user.editButton')} {/* Translate Edit */}
                 </Button>
                 <Button variant="danger" onClick={() => handleDelete(user.id)}>
-                  Delete
+                  {t('user.deleteButton')} {/* Translate Delete */}
                 </Button>
               </td>
             </tr>
@@ -116,37 +118,37 @@ const UserComponent = () => {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{form.id ? 'Edit' : 'New'} User</Modal.Title>
+          <Modal.Title>{t(form.id ? 'user.editUser' : 'user.newUser')}</Modal.Title> {/* Translate Edit/New User */}
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group>
-              <Form.Label>Username</Form.Label>
+              <Form.Label>{t('user.usernameLabel')}</Form.Label> {/* Translate Username */}
               <Form.Control type="text" name="username" value={form.username} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>First Name</Form.Label>
+              <Form.Label>{t('user.firstNameLabel')}</Form.Label> {/* Translate First Name */}
               <Form.Control type="text" name="firstName" value={form.firstName} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>Last Name</Form.Label>
+              <Form.Label>{t('user.lastNameLabel')}</Form.Label> {/* Translate Last Name */}
               <Form.Control type="text" name="lastName" value={form.lastName} onChange={handleInputChange} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>Email</Form.Label>
+              <Form.Label>{t('user.emailLabel')}</Form.Label> {/* Translate Email */}
               <Form.Control type="email" name="email" value={form.email} onChange={handleInputChange} />
             </Form.Group>
             {!form.id && (
               <Form.Group>
-                <Form.Label>Password</Form.Label>
+                <Form.Label>{t('user.passwordLabel')}</Form.Label> {/* Translate Password */}
                 <Form.Control type="password" name="password" value={form.password} onChange={handleInputChange} />
               </Form.Group>
             )}
             <Form.Group>
-              <Form.Label>Role</Form.Label>
+              <Form.Label>{t('user.roleLabel')}</Form.Label> {/* Translate Role */}
               <Form.Select name="role" value={form.role} onChange={handleSelectChange}>
-                <option value="USER">User</option>
-                <option value="ADMIN">Admin</option>
+                <option value="USER">{t('user.roleUser')}</option> {/* Translate User Role */}
+                <option value="ADMIN">{t('user.roleAdmin')}</option> {/* Translate Admin Role */}
               </Form.Select>
             </Form.Group>
           </Form>
@@ -154,36 +156,36 @@ const UserComponent = () => {
         <Modal.Footer>
           {form.id && (
             <Button variant="info" onClick={() => setShowChangePasswordModal(true)}>
-              Change Password
+              {t('user.changePasswordButton')} {/* Translate Change Password */}
             </Button>
           )}
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
+            {t('user.closeButton')} {/* Translate Close */}
           </Button>
           <Button variant="primary" onClick={handleSave}>
-            Save Changes
+            {t('user.saveChangesButton')} {/* Translate Save Changes */}
           </Button>
         </Modal.Footer>
       </Modal>
       
       <Modal show={showChangePasswordModal} onHide={() => setShowChangePasswordModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Change Password</Modal.Title>
+          <Modal.Title>{t('user.changePasswordModalTitle')}</Modal.Title> {/* Translate Change Password Modal Title */}
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group>
-              <Form.Label>New Password</Form.Label>
+              <Form.Label>{t('user.newPasswordLabel')}</Form.Label> {/* Translate New Password */}
               <Form.Control type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowChangePasswordModal(false)}>
-            Close
+            {t('user.closeButton')} {/* Translate Close */}
           </Button>
           <Button variant="primary" onClick={handleChangePassword}>
-            Save Changes
+            {t('user.saveChangesButton')} {/* Translate Save Changes */}
           </Button>
         </Modal.Footer>
       </Modal>

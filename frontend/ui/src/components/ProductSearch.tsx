@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Form, Table, Button, InputGroup } from 'react-bootstrap';
 import axios from '../api/axios';
 import { Product } from '../types/Product';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 interface ProductSearchProps {
   onAddProduct: (product: Product) => void;
 }
 
 const ProductSearch = ({ onAddProduct }: ProductSearchProps) => {
+  const { t } = useTranslation(); // Initialize useTranslation
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -43,21 +45,21 @@ const ProductSearch = ({ onAddProduct }: ProductSearchProps) => {
       <Form onSubmit={handleSearchSubmit}>
         <InputGroup className="mb-3">
           <Form.Control
-            placeholder="Search for products by name"
+            placeholder={t('productSearch.searchPlaceholder')} // Translate placeholder
             value={searchTerm}
             onChange={handleSearchChange}
           />
           <Button variant="outline-secondary" type="submit">
-            Search
+            {t('productSearch.searchButton')} {/* Translate Search button */}
           </Button>
         </InputGroup>
       </Form>
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Stock</th>
+            <th>{t('productSearch.nameHeader')}</th> {/* Translate Name */}
+            <th>{t('productSearch.priceHeader')}</th> {/* Translate Price */}
+            <th>{t('productSearch.stockHeader')}</th> {/* Translate Stock */}
             <th></th>
           </tr>
         </thead>
@@ -69,7 +71,7 @@ const ProductSearch = ({ onAddProduct }: ProductSearchProps) => {
               <td>{product.stockQuantity}</td>
               <td>
                 <Button variant="success" onClick={() => onAddProduct(product)}>
-                  Add
+                  {t('productSearch.addButton')} {/* Translate Add button */}
                 </Button>
               </td>
             </tr>

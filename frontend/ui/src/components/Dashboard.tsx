@@ -12,12 +12,14 @@ import CustomerComponent from './Customer';
 import { Product } from '../types/Product';
 import { Customer } from '../types/Customer';
 import { SaleItem } from '../types/SaleItem';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 interface DashboardProps {
     onLogout: () => void;
 }
 
 const Dashboard = ({ onLogout }: DashboardProps) => {
+    const { t } = useTranslation(); // Initialize useTranslation
     const [barcode, setBarcode] = useState('');
     const [items, setItems] = useState<SaleItem<Product>[]>([]);
     const [showProductSearch, setShowProductSearch] = useState(false);
@@ -84,13 +86,14 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
         <Container fluid>
             <Row>
                 <Col xs={8}>
-                    <h1>POS Screen</h1>
+                    <h1>{t('dashboard.posScreen')}</h1> {/* Translate POS Screen */}
                     <Form onSubmit={handleBarcodeSubmit}>
                         <Form.Group>
-                            <Form.Label>Barcode</Form.Label>
+                            <Form.Label>{t('dashboard.barcode')}</Form.Label> {/* Translate Barcode */}
+                            {/* Translate Enter barcode */}
                             <Form.Control
                                 type="text"
-                                placeholder="Enter barcode"
+                                placeholder={t('dashboard.enterBarcode')}
                                 value={barcode}
                                 onChange={handleBarcodeChange}
                                 autoFocus
@@ -98,37 +101,37 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
                         </Form.Group>
                     </Form>
                     <Button variant="info" className="my-3 me-2" onClick={() => setShowProductSearch(true)}>
-                        Search for Product
+                        {t('dashboard.searchProduct')} {/* Translate Search for Product */}
                     </Button>
                     <Button variant="info" className="my-3 me-2" onClick={() => setShowCustomerSearch(true)}>
-                        Search for Customer
+                        {t('dashboard.searchCustomer')} {/* Translate Search for Customer */}
                     </Button>
                     <Button variant="secondary" className="my-3 me-2" onClick={() => setShowLastSales(true)}>
-                        Last Sales
+                        {t('dashboard.lastSales')} {/* Translate Last Sales */}
                     </Button>
                     <Button variant="dark" className="my-3 me-2" onClick={() => setShowSuppliers(true)}>
-                        Suppliers
+                        {t('dashboard.suppliers')} {/* Translate Suppliers */}
                     </Button>
                     <Button variant="danger" className="my-3 me-2" onClick={() => setShowUsers(true)}>
-                        Users
+                        {t('dashboard.users')} {/* Translate Users */}
                     </Button>
                     <Button variant="success" className="my-3 me-2" onClick={() => setShowProducts(true)}>
-                        Products
+                        {t('dashboard.products')} {/* Translate Products */}
                     </Button>
                     <Button variant="primary" className="my-3 me-2" onClick={() => setShowCustomers(true)}>
-                        Customers
+                        {t('dashboard.customers')} {/* Translate Customers */}
                     </Button>
                     <Button variant="warning" className="my-3" onClick={onLogout}>
-                        Logout
+                        {t('dashboard.logout')} {/* Translate Logout */}
                     </Button>
                     <Table striped bordered hover className="mt-3">
                         <thead>
                             <tr>
-                                <th>Barcode</th>
-                                <th>Name</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Subtotal</th>
+                                <th>{t('dashboard.barcodeHeader')}</th> {/* Translate Barcode Header */}
+                                <th>{t('dashboard.nameHeader')}</th> {/* Translate Name Header */}
+                                <th>{t('dashboard.priceHeader')}</th> {/* Translate Price Header */}
+                                <th>{t('dashboard.quantityHeader')}</th> {/* Translate Quantity Header */}
+                                <th>{t('dashboard.subtotalHeader')}</th> {/* Translate Subtotal Header */}
                             </tr>
                         </thead>
                         <tbody>
@@ -145,23 +148,23 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
                     </Table>
                 </Col>
                 <Col xs={4} className="bg-light p-3">
-                    <h2>Total</h2>
+                    <h2>{t('dashboard.total')}</h2> {/* Translate Total */}
                     <h3>${calculateTotal().toFixed(2)}</h3>
                     {selectedCustomer && (
                         <div>
-                            <h4>Customer: {selectedCustomer.fullName}</h4>
+                            <h4>{t('dashboard.customer')}: {selectedCustomer.fullName}</h4> {/* Translate Customer */}
                         </div>
                     )}
                     <div className="d-grid">
                         <Button variant="primary" onClick={() => setShowCheckout(true)} disabled={items.length === 0}>
-                            Checkout
+                            {t('dashboard.checkout')} {/* Translate Checkout */}
                         </Button>
                     </div>
                 </Col>
             </Row>
             <Modal show={showProductSearch} onHide={() => setShowProductSearch(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Search for Product</Modal.Title>
+                    <Modal.Title>{t('dashboard.searchProduct')}</Modal.Title> {/* Translate Search for Product */}
                 </Modal.Header>
                 <Modal.Body>
                     <ProductSearch onAddProduct={handleAddProduct} />
@@ -169,7 +172,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
             </Modal>
             <Modal show={showCustomerSearch} onHide={() => setShowCustomerSearch(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Search for Customer</Modal.Title>
+                    <Modal.Title>{t('dashboard.searchCustomer')}</Modal.Title> {/* Translate Search for Customer */}
                 </Modal.Header>
                 <Modal.Body>
                     <CustomerSearch onSelectCustomer={handleSelectCustomer} />
@@ -177,7 +180,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
             </Modal>
             <Modal show={showCheckout} onHide={() => setShowCheckout(false)}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Checkout</Modal.Title>
+                    <Modal.Title>{t('dashboard.checkout')}</Modal.Title> {/* Translate Checkout */}
                 </Modal.Header>
                 <Modal.Body>
                     <Checkout
@@ -190,7 +193,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
             </Modal>
             <Modal show={showLastSales} onHide={() => setShowLastSales(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Last 10 Sales</Modal.Title>
+                    <Modal.Title>{t('dashboard.lastSales')}</Modal.Title> {/* Translate Last 10 Sales */}
                 </Modal.Header>
                 <Modal.Body>
                     <LastSales key={lastSalesKey} />
@@ -198,7 +201,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
             </Modal>
             <Modal show={showSuppliers} onHide={() => setShowSuppliers(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Suppliers</Modal.Title>
+                    <Modal.Title>{t('dashboard.suppliers')}</Modal.Title> {/* Translate Suppliers */}
                 </Modal.Header>
                 <Modal.Body>
                     <SupplierComponent />
@@ -206,7 +209,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
             </Modal>
             <Modal show={showUsers} onHide={() => setShowUsers(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Users</Modal.Title>
+                    <Modal.Title>{t('dashboard.users')}</Modal.Title> {/* Translate Users */}
                 </Modal.Header>
                 <Modal.Body>
                     <UserComponent />
@@ -214,7 +217,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
             </Modal>
             <Modal show={showProducts} onHide={() => setShowProducts(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Products</Modal.Title>
+                    <Modal.Title>{t('dashboard.products')}</Modal.Title> {/* Translate Products */}
                 </Modal.Header>
                 <Modal.Body>
                     <ProductComponent />
@@ -222,7 +225,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
             </Modal>
             <Modal show={showCustomers} onHide={() => setShowCustomers(false)} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Customers</Modal.Title>
+                    <Modal.Title>{t('dashboard.customers')}</Modal.Title> {/* Translate Customers */}
                 </Modal.Header>
                 <Modal.Body>
                     <CustomerComponent />
