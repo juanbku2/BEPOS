@@ -37,6 +37,11 @@ public class ProductService {
         return productRepository.findByBarcode(barcode);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<mx.bepos.pos.domain.Supplier> getSupplierById(Integer id) {
+        return supplierRepository.findById(id);
+    }
+
     @Transactional
     public Product saveProduct(Product product) {
         if (product.getSupplier() != null && product.getSupplier().getId() != null) {

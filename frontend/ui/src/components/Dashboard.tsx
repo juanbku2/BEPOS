@@ -56,16 +56,36 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
         setBarcode('');
     };
 
+    const handleQuantityChange = (productId: number, newQuantity: number) => {
+      setItems(prevItems =>
+        prevItems.map(item =>
+          item.product.id === productId ? { ...item, quantity: newQuantity } : item
+        ).filter(item => item.quantity > 0) // Remove item if quantity drops to 0 or less
+      );
+    };
+
     const calculateTotal = () => {
         return items.reduce((total, item) => total + item.product.salePrice * item.quantity, 0);
     };
 
     const handleAddProduct = (product: Product) => {
-        const existingItem = items.find(item => item.product.id === product.id);
-        if (existingItem) {
-            setItems(items.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
+        const existingItemIndex = items.findIndex(item => item.product.id === product.id);
+        if (existingItemIndex !== -1) {
+            const updatedItems = [...items];
+            const currentQuantity = updatedItems[existingItemIndex].quantity;
+            let newQuantity;
+
+            if (product.unitOfMeasure === 'UNIT') {
+              newQuantity = currentQuantity + 1;
+            } else {
+              // For KG/LITER, if adding from search, default to 1 unit or prompt for input
+              // For simplicity, let's just increment by 1 for now or set to 1 if not present
+              newQuantity = currentQuantity + 1;
+            }
+            updatedItems[existingItemIndex] = { ...updatedItems[existingItemIndex], quantity: newQuantity };
+            setItems(updatedItems);
         } else {
-            setItems([...items, { product: product, quantity: 1 }]);
+            setItems([...items, { product: product, quantity: product.unitOfMeasure === 'UNIT' ? 1 : 0.5 }]); // Default to 0.5 for KG/LITER, 1 for UNIT
         }
         setShowProductSearch(false);
     }
@@ -129,6 +149,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
                             <tr>
                                 <th>{t('dashboard.barcodeHeader')}</th> {/* Translate Barcode Header */}
                                 <th>{t('dashboard.nameHeader')}</th> {/* Translate Name Header */}
+                                <th>{t('dashboard.unitHeader')}</th> {/* New: Translate Unit Header */}
                                 <th>{t('dashboard.priceHeader')}</th> {/* Translate Price Header */}
                                 <th>{t('dashboard.quantityHeader')}</th> {/* Translate Quantity Header */}
                                 <th>{t('dashboard.subtotalHeader')}</th> {/* Translate Subtotal Header */}
@@ -139,8 +160,36 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
                                 <tr key={index}>
                                     <td>{item.product.barcode}</td>
                                     <td>{item.product.name}</td>
+                                    <td>{item.product.unitOfMeasure}</td> {/* Display Unit of Measure */}
                                     <td>${item.product.salePrice.toFixed(2)}</td>
-                                    <td>{item.quantity}</td>
+                                    <td>
+                                      {item.product.unitOfMeasure === 'UNIT' ? (
+                                        <div className="d-flex align-items-center">
+                                          <Button variant="outline-secondary" size="sm" onClick={() => handleQuantityChange(item.product.id, item.quantity - 1)}>
+                                            -
+                                          </Button>
+                                          <Form.Control
+                                            type="text" // Use text to prevent default number input behavior, or make it readonly
+                                            value={item.quantity}
+                                            readOnly
+                                            className="mx-1 text-center"
+                                            style={{ width: '50px' }}
+                                          />
+                                          <Button variant="outline-secondary" size="sm" onClick={() => handleQuantityChange(item.product.id, item.quantity + 1)}>
+                                            +
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <Form.Control
+                                          type="number"
+                                          step="0.001" // Allow decimal input
+                                          value={item.quantity}
+                                          onChange={(e) => handleQuantityChange(item.product.id, Number(e.target.value))}
+                                          className="text-center"
+                                          style={{ width: '80px' }}
+                                        />
+                                      )}
+                                    </td>
                                     <td>${(item.product.salePrice * item.quantity).toFixed(2)}</td>
                                 </tr>
                             ))}

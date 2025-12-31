@@ -37,29 +37,37 @@ const ProductComponent = () => {
       });
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    setForm(prevForm => ({
+      ...prevForm,
+      [name]: type === 'number' ? Number(value) : value,
+    }));
   };
 
   const handleSupplierChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const supplierId = parseInt(e.target.value, 10);
     const supplier = suppliers.find(s => s.id === supplierId);
-    if (supplier) {
-      setForm({ ...form, supplier });
-    }
+    setForm({ ...form, supplier: supplier || null });
   };
 
   const handleSave = () => {
     const method = form.id ? 'put' : 'post';
     const url = form.id ? `/api/v1/products/${form.id}` : '/api/v1/products';
 
+    // Ensure unitOfMeasure is sent as a string, e.g., "UNIT"
     const productData = {
       ...form,
       purchasePrice: Number(form.purchasePrice) || 0,
       salePrice: Number(form.salePrice) || 0,
       stockQuantity: Number(form.stockQuantity) || 0,
       minStockAlert: Number(form.minStockAlert) || 0,
+      unitOfMeasure: form.unitOfMeasure || 'UNIT', // Ensure default 'UNIT' if not set
+      supplierId: form.supplier?.id || null // Send supplier ID if available
     };
+    
+    // Remove supplier object to avoid circular reference or unnecessary data in request body
+    delete productData.supplier;
 
     axios[method](url, productData)
       .then(() => {
@@ -87,7 +95,7 @@ const ProductComponent = () => {
   };
 
   const handleNew = () => {
-    setForm({ id: 0, name: '', barcode: '', purchasePrice: 0, salePrice: 0, stockQuantity: 0, minStockAlert: 0, supplier: null });
+    setForm({ id: 0, name: '', barcode: '', purchasePrice: 0, salePrice: 0, stockQuantity: 0, minStockAlert: 0, supplier: null, unitOfMeasure: 'UNIT' });
     setShowModal(true);
   };
 
@@ -103,6 +111,7 @@ const ProductComponent = () => {
             <th>{t('product.barcodeHeader')}</th> {/* Translate Barcode */}
             <th>{t('product.salePriceHeader')}</th> {/* Translate Sale Price */}
             <th>{t('product.stockHeader')}</th> {/* Translate Stock */}
+            <th>{t('product.unitOfMeasureHeader')}</th> {/* New: Translate Unit of Measure Header */}
             <th>{t('product.supplierHeader')}</th> {/* Translate Supplier */}
             <th>{t('product.actionsHeader')}</th> {/* Translate Actions */}
           </tr>
@@ -114,6 +123,7 @@ const ProductComponent = () => {
               <td>{product.barcode}</td>
               <td>${product.salePrice.toFixed(2)}</td>
               <td>{product.stockQuantity}</td>
+              <td>{product.unitOfMeasure}</td> {/* New: Display Unit of Measure */}
               <td>{product.supplier?.name}</td>
               <td>
                 <Button variant="warning" onClick={() => handleEdit(product)} className="me-2">
@@ -157,6 +167,14 @@ const ProductComponent = () => {
             <Form.Group>
               <Form.Label>{t('product.minStockAlertLabel')}</Form.Label> {/* Translate Min Stock Alert */}
               <Form.Control type="number" name="minStockAlert" value={form.minStockAlert} onChange={handleInputChange} />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>{t('product.unitOfMeasureLabel')}</Form.Label> {/* Translate Unit of Measure */}
+              <Form.Select name="unitOfMeasure" value={form.unitOfMeasure || 'UNIT'} onChange={handleInputChange}>
+                <option value="KG">KG</option>
+                <option value="LITER">LITER</option>
+                <option value="UNIT">UNIT</option>
+              </Form.Select>
             </Form.Group>
             <Form.Group>
               <Form.Label>{t('product.supplierLabel')}</Form.Label> {/* Translate Supplier */}

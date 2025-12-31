@@ -12,5 +12,6 @@ public class ProductRequest {
     private BigDecimal salePrice;
     private BigDecimal stockQuantity;
     private BigDecimal minStockAlert;
+    private String unitOfMeasure; // Represent as String in DTO for simplicity in request
     private Integer supplierId;
 }

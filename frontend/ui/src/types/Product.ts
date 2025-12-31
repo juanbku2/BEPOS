@@ -8,5 +8,6 @@ export interface Product {
   salePrice: number;
   stockQuantity: number;
   minStockAlert: number;
+  unitOfMeasure: 'KG' | 'LITER' | 'UNIT';
   supplier: Supplier | null;
 }

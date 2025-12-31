@@ -34,6 +34,7 @@
     "nameHeader": "Name",
     "priceHeader": "Price",
     "quantityHeader": "Quantity",
+    "unitHeader": "Unit",
     "subtotalHeader": "Subtotal",
     "total": "Total",
     "customer": "Customer",
@@ -116,6 +117,8 @@
     "minStockAlertLabel": "Min Stock Alert",
     "supplierLabel": "Supplier",
     "selectSupplier": "Select a supplier",
+    "unitOfMeasureLabel": "Unit of Measure",
+    "unitOfMeasureHeader": "Unit",
     "closeButton": "Close",
     "saveChangesButton": "Save Changes"
   },

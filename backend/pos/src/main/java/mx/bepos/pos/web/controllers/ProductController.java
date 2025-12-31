@@ -5,8 +5,10 @@ import mx.bepos.pos.domain.Product;
 import mx.bepos.pos.services.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import mx.bepos.pos.web.dto.ProductRequest;
 
 import java.util.List;
+import mx.bepos.pos.domain.UnitOfMeasure;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -38,20 +40,40 @@ public class ProductController {
     }
 
     @PostMapping
-    public Product createProduct(@RequestBody Product product) {
+    public Product createProduct(@RequestBody ProductRequest productRequest) {
+        Product product = new Product();
+        product.setName(productRequest.getName());
+        product.setBarcode(productRequest.getBarcode());
+        product.setPurchasePrice(productRequest.getPurchasePrice());
+        product.setSalePrice(productRequest.getSalePrice());
+        product.setStockQuantity(productRequest.getStockQuantity());
+        product.setMinStockAlert(productRequest.getMinStockAlert());
+        product.setUnitOfMeasure(productRequest.getUnitOfMeasure() != null ? UnitOfMeasure.valueOf(productRequest.getUnitOfMeasure()) : UnitOfMeasure.UNIT);
+        if (productRequest.getSupplierId() != null) {
+            productService.getSupplierById(productRequest.getSupplierId())
+                    .ifPresent(product::setSupplier);
+        }
         return productService.saveProduct(product);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Integer id, @RequestBody Product productDetails) {
+    public ResponseEntity<Product> updateProduct(@PathVariable Integer id, @RequestBody ProductRequest productRequest) {
         return productService.getProductById(id)
                 .map(product -> {
-                    product.setName(productDetails.getName());
-                    product.setPurchasePrice(productDetails.getPurchasePrice());
-                    product.setSalePrice(productDetails.getSalePrice());
-                    product.setStockQuantity(productDetails.getStockQuantity());
-                    product.setMinStockAlert(productDetails.getMinStockAlert());
-                    product.setSupplier(productDetails.getSupplier());
+                    product.setName(productRequest.getName());
+                    product.setBarcode(productRequest.getBarcode());
+                    product.setPurchasePrice(productRequest.getPurchasePrice());
+                    product.setSalePrice(productRequest.getSalePrice());
+                    product.setStockQuantity(productRequest.getStockQuantity());
+                    product.setMinStockAlert(productRequest.getMinStockAlert());
+                    product.setUnitOfMeasure(productRequest.getUnitOfMeasure() != null ? UnitOfMeasure.valueOf(productRequest.getUnitOfMeasure()) : UnitOfMeasure.UNIT);
+
+                    if (productRequest.getSupplierId() != null) {
+                        productService.getSupplierById(productRequest.getSupplierId())
+                                .ifPresent(product::setSupplier);
+                    } else {
+                        product.setSupplier(null); // Clear supplier if not provided
+                    }
                     return ResponseEntity.ok(productService.saveProduct(product));
                 })
                 .orElse(ResponseEntity.notFound().build());

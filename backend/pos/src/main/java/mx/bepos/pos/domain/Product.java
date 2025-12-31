@@ -38,6 +38,11 @@ public class Product {
     @Column(precision = 10, scale = 3)
     private BigDecimal minStockAlert;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    @Builder.Default
+    private UnitOfMeasure unitOfMeasure = UnitOfMeasure.UNIT;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id")
     private Supplier supplier;
