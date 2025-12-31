@@ -5,6 +5,8 @@ import Dashboard from './components/Dashboard';
 import { useTranslation } from 'react-i18next';
 import { Button, Dropdown } from 'react-bootstrap';
 import i18n from './i18n'; // Import i18n instance
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const { t } = useTranslation();
@@ -28,6 +30,14 @@ function App() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover={false}
+      />
       <div className="d-flex justify-content-end p-2">
         <Dropdown>
           <Dropdown.Toggle variant="secondary" id="dropdown-basic">

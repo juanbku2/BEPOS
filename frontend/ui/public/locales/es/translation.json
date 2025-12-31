@@ -136,5 +136,16 @@
     "currentDebtLabel": "Deuda Actual",
     "closeButton": "Cerrar",
     "saveChangesButton": "Guardar Cambios"
+  },
+  "errors": {
+    "unexpected": "Ha ocurrido un error inesperado.",
+    "badRequest": "Petición incorrecta.",
+    "unauthorized": "No autorizado. Por favor, inicie sesión de nuevo.",
+    "forbidden": "No tiene permiso para realizar esta acción.",
+    "notFound": "El recurso solicitado no fue encontrado.",
+    "serverError": "Error interno del servidor. Por favor, intente más tarde.",
+    "networkError": "Error de red. No se pudo conectar con el servidor.",
+    "generic": "Error: {{status}}"
   }
 }
+
