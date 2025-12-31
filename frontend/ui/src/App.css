@@ -78,6 +78,17 @@ body {
     background-position: center;
 }
 
+/* Hide arrows from number inputs */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+
 /* --- Responsive Design --- */
 @media (max-width: 991.98px) {
     .btn:not(.btn-sm) { min-height: 48px; font-size: 1.05rem; }

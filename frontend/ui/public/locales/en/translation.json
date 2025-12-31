@@ -48,7 +48,11 @@
     "total": "Total",
     "cash": "Cash",
     "credit": "Credit",
-    "debit": "Debit"
+    "debit": "Debit",
+    "cashReceived": "Cash Received",
+    "change": "Change",
+    "confirm": "Confirm",
+    "back": "Back"
   },
   "customerSearch": {
     "searchPlaceholder": "Search for customers by name",

@@ -43,6 +43,7 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     const [showProductSearch, setShowProductSearch] = useState(false);
     const [showCustomerSearch, setShowCustomerSearch] = useState(false);
     const [showCheckout, setShowCheckout] = useState(false);
+    const [checkoutTotal, setCheckoutTotal] = useState(0);
     
     // Key for re-rendering sales component
     const [lastSalesKey, setLastSalesKey] = useState(0);
@@ -70,20 +71,43 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     };
     
     const handleQuantityChange = (productId: number, newQuantity: number) => {
-        if (newQuantity > 0) {
-            setItems(items.map(item => item.product.id === productId ? { ...item, quantity: newQuantity } : item));
-        } else {
-            setItems(items.filter(item => item.product.id !== productId));
-        }
+        setItems(currentItems => {
+            if (newQuantity > 0) {
+                const updatedItems = currentItems.map(item =>
+                    item.product.id === productId ? { ...item, quantity: newQuantity } : item
+                );
+                // If item not found, it means it was a new item from a step change, add it.
+                if (!updatedItems.find(item => item.product.id === productId)) {
+                    const originalItem = items.find(item => item.product.id === productId);
+                    if(originalItem) {
+                        return [...updatedItems, { ...originalItem, quantity: newQuantity }];
+                    }
+                }
+                return updatedItems;
+            } else {
+                return currentItems.filter(item => item.product.id !== productId);
+            }
+        });
     };
     
-    const handleQuantityBlur = (item: SaleItem<Product>) => {
-        const value = editingQuantity[item.product.id];
-        if (value === undefined) return;
-        const newQuantity = item.product.unitOfMeasure === 'UNIT' ? parseInt(value, 10) : parseFloat(value);
-        if (!isNaN(newQuantity) && newQuantity >= 0) {
-            handleQuantityChange(item.product.id, newQuantity);
+    const handleStepChange = (item: SaleItem<Product>, step: number) => {
+        const currentValueStr = editingQuantity[item.product.id];
+        let currentQuantity: number;
+
+        if (currentValueStr !== undefined) {
+            currentQuantity = item.product.unitOfMeasure === 'UNIT' ? parseInt(currentValueStr, 10) : parseFloat(currentValueStr);
+            if (isNaN(currentQuantity)) {
+                currentQuantity = item.quantity;
+            }
+        } else {
+            currentQuantity = item.quantity;
         }
+
+        const newQuantity = currentQuantity + step;
+        handleQuantityChange(item.product.id, newQuantity);
+
+        // After a step change, we clear the editing state for that item
+        // to show the newly calculated quantity.
         setEditingQuantity(prev => {
             const newState = { ...prev };
             delete newState[item.product.id];
@@ -91,16 +115,52 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
         });
     };
 
-    const calculateTotal = () => items.reduce((total, item) => total + item.product.salePrice * item.quantity, 0);
+    const handleQuantityBlur = (item: SaleItem<Product>) => {
+        const value = editingQuantity[item.product.id];
+        if (value === undefined) return;
+        
+        const newQuantity = item.product.unitOfMeasure === 'UNIT' ? parseInt(value, 10) : parseFloat(value);
+        
+        if (!isNaN(newQuantity) && newQuantity >= 0) {
+            handleQuantityChange(item.product.id, newQuantity);
+        }
+
+        setEditingQuantity(prev => {
+            const newState = { ...prev };
+            delete newState[item.product.id];
+            return newState;
+        });
+    };
+
+    const handleOpenCheckout = () => {
+        const newItems = items.map(item => {
+            const editedValue = editingQuantity[item.product.id];
+            if (editedValue !== undefined) {
+                const newQuantity = item.product.unitOfMeasure === 'UNIT' ? parseInt(editedValue, 10) : parseFloat(editedValue);
+                if (!isNaN(newQuantity) && newQuantity > 0) {
+                    return { ...item, quantity: newQuantity };
+                } else {
+                    return { ...item, quantity: 0 };
+                }
+            }
+            return item;
+        }).filter(item => item.quantity > 0);
+
+        setItems(newItems);
+        setEditingQuantity({});
+
+        const newTotal = newItems.reduce((total, item) => total + item.product.salePrice * item.quantity, 0);
+        setCheckoutTotal(newTotal);
+        setShowCheckout(true);
+    };
 
     const handleSaleComplete = () => {
         setItems([]);
         setSelectedCustomer(null);
         setShowCheckout(false);
-        setLastSalesKey(prevKey => prevKey + 1); // Refresh sales view if it's open
+        setLastSalesKey(prevKey => prevKey + 1);
     };
     
-    // --- View Rendering ---
     const renderPosView = () => (
         <>
             <p>Escanea o introduce el código de barras</p>
@@ -124,7 +184,7 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
                             <tr>
                                 <th>{t('dashboard.nameHeader')}</th>
                                 <th className="text-end">{t('dashboard.priceHeader')}</th>
-                                <th style={{ width: '150px' }}>{t('dashboard.quantityHeader')}</th>
+                                <th style={{ width: '170px' }}>{t('dashboard.quantityHeader')}</th>
                                 <th className="text-end">{t('dashboard.subtotalHeader')}</th>
                             </tr>
                         </thead>
@@ -135,7 +195,9 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
                                     <td className="text-end">${item.product.salePrice.toFixed(2)}</td>
                                     <td>
                                         <div className="d-flex align-items-center">
+                                            <Button size="sm" className="quantity-btn" variant="outline-secondary" onClick={() => handleStepChange(item, item.product.unitOfMeasure === 'UNIT' ? -1 : -0.01)}>-</Button>
                                             <Form.Control type="number" step={item.product.unitOfMeasure === 'UNIT' ? "1" : "0.001"} value={editingQuantity[item.product.id] ?? item.quantity} onChange={(e) => setEditingQuantity({ ...editingQuantity, [item.product.id]: e.target.value })} onBlur={() => handleQuantityBlur(item)} className="mx-1 text-center quantity-input" />
+                                            <Button size="sm" className="quantity-btn" variant="outline-secondary" onClick={() => handleStepChange(item, item.product.unitOfMeasure === 'UNIT' ? 1 : 0.01)}>+</Button>
                                         </div>
                                     </td>
                                     <td className="text-end">${(item.product.salePrice * item.quantity).toFixed(2)}</td>
@@ -149,11 +211,11 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
                         <Card.Body className="text-center">
                              <div className="total-display-container">
                                 <Card.Title>{t('dashboard.total')}</Card.Title>
-                                <Card.Text as="div" className="total-display">${calculateTotal().toFixed(2)}</Card.Text>
+                                <Card.Text as="div" className="total-display">${items.reduce((total, item) => total + item.product.salePrice * item.quantity, 0).toFixed(2)}</Card.Text>
                             </div>
                             {selectedCustomer && <div className="mb-3"><strong>{selectedCustomer.fullName}</strong></div>}
                             <div className="d-grid">
-                                <Button variant="success" size="lg" onClick={() => setShowCheckout(true)} disabled={items.length === 0}>{t('dashboard.checkout')}</Button>
+                                <Button variant="success" size="lg" onClick={handleOpenCheckout} disabled={items.length === 0}>{t('dashboard.checkout')}</Button>
                             </div>
                         </Card.Body>
                     </Card>
@@ -188,7 +250,7 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
             {/* Modals for POS view */}
             <Modal show={showProductSearch} onHide={() => setShowProductSearch(false)} size="lg"><Modal.Header closeButton><Modal.Title>{t('dashboard.searchProduct')}</Modal.Title></Modal.Header><Modal.Body><ProductSearch onAddProduct={(p) => { addProductToCart(p, p.unitOfMeasure === 'UNIT' ? 1 : 0.5); setShowProductSearch(false); }} /></Modal.Body></Modal>
             <Modal show={showCustomerSearch} onHide={() => setShowCustomerSearch(false)} size="lg"><Modal.Header closeButton><Modal.Title>{t('dashboard.searchCustomer')}</Modal.Title></Modal.Header><Modal.Body><CustomerSearch onSelectCustomer={(c) => { setSelectedCustomer(c); setShowCustomerSearch(false); }} /></Modal.Body></Modal>
-            <Modal show={showCheckout} onHide={() => setShowCheckout(false)}><Modal.Header closeButton><Modal.Title>{t('dashboard.checkout')}</Modal.Title></Modal.Header><Modal.Body><Checkout items={items.map(it => ({ productId: it.product.id, quantity: it.quantity, price: it.product.salePrice }))} customer={selectedCustomer} total={calculateTotal()} onSaleComplete={handleSaleComplete} /></Modal.Body></Modal>
+            <Modal show={showCheckout} onHide={() => setShowCheckout(false)}><Modal.Header closeButton><Modal.Title>{t('dashboard.checkout')}</Modal.Title></Modal.Header><Modal.Body><Checkout items={items.map(it => ({ productId: it.product.id, quantity: it.quantity, price: it.product.salePrice }))} customer={selectedCustomer} total={checkoutTotal} onSaleComplete={handleSaleComplete} /></Modal.Body></Modal>
         </div>
     );
 };

@@ -48,7 +48,11 @@
     "total": "Total",
     "cash": "Efectivo",
     "credit": "Crédito",
-    "debit": "Débito"
+    "debit": "Débito",
+    "cashReceived": "Efectivo Recibido",
+    "change": "Cambio",
+    "confirm": "Confirmar",
+    "back": "Volver"
   },
   "customerSearch": {
     "searchPlaceholder": "Buscar clientes por nombre",
