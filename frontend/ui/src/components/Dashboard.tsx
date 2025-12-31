@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { Container, Row, Col, Form, Table, Button, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Form, Table, Button, Modal, Card, InputGroup } from 'react-bootstrap';
 import axios from '../api/axios';
+
+// Import Components
+import Sidebar from './Sidebar';
 import ProductSearch from './ProductSearch';
 import CustomerSearch from './CustomerSearch';
 import Checkout from './Checkout';
@@ -9,299 +12,184 @@ import SupplierComponent from './Supplier';
 import UserComponent from './User';
 import ProductComponent from './Product';
 import CustomerComponent from './Customer';
+
+// Import Types
 import { Product } from '../types/Product';
 import { Customer } from '../types/Customer';
 import { SaleItem } from '../types/SaleItem';
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+
+// Import Styling & Translation
+import { useTranslation } from 'react-i18next';
+import '../App.css'; // Main app styles
+
 
 interface DashboardProps {
     onLogout: () => void;
+    theme: string;
+    setTheme: (theme: string) => void;
 }
 
-const Dashboard = ({ onLogout }: DashboardProps) => {
-    const { t } = useTranslation(); // Initialize useTranslation
+const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
+    const { t } = useTranslation();
+    const [currentView, setCurrentView] = useState('pos');
+
+    // POS-specific states
     const [barcode, setBarcode] = useState('');
     const [items, setItems] = useState<SaleItem<Product>[]>([]);
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [editingQuantity, setEditingQuantity] = useState<{ [key: number]: string }>({});
+    
+    // Modal states
     const [showProductSearch, setShowProductSearch] = useState(false);
     const [showCustomerSearch, setShowCustomerSearch] = useState(false);
     const [showCheckout, setShowCheckout] = useState(false);
-    const [showLastSales, setShowLastSales] = useState(false);
-    const [showSuppliers, setShowSuppliers] = useState(false);
-    const [showUsers, setShowUsers] = useState(false);
-    const [showProducts, setShowProducts] = useState(false);
-    const [showCustomers, setShowCustomers] = useState(false);
-    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    
+    // Key for re-rendering sales component
     const [lastSalesKey, setLastSalesKey] = useState(0);
-    const [editingQuantity, setEditingQuantity] = useState<{ [key: number]: string }>({});
 
-    const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setBarcode(e.target.value);
-    };
-
+    // --- Data Handling Functions ---
     const handleBarcodeSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (!barcode) return;
         axios.get(`/api/v1/products/barcode/${barcode}`)
-            .then(response => {
-                const product = response.data;
-                const existingItem = items.find(item => item.product.id === product.id);
-                if (existingItem) {
-                    setItems(items.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
-                } else {
-                    setItems([...items, { product: product, quantity: 1 }]);
-                }
-            })
-            .catch(error => {
-                console.error(`Error fetching product with barcode ${barcode}:`, error);
-                // Handle error, e.g., show a "product not found" message
-            });
+            .then(response => addProductToCart(response.data))
+            .catch(error => console.error(`Error fetching product with barcode ${barcode}:`, error));
         setBarcode('');
     };
 
-    const handleQuantityChange = (productId: number, newQuantity: number) => {
-      setItems(prevItems =>
-        prevItems.map(item =>
-          item.product.id === productId ? { ...item, quantity: newQuantity } : item
-        ).filter(item => item.quantity > 0) // Remove item if quantity drops to 0 or less
-      );
-    };
-
-    const calculateTotal = () => {
-        return items.reduce((total, item) => total + item.product.salePrice * item.quantity, 0);
-    };
-
-    const handleAddProduct = (product: Product) => {
-        const existingItemIndex = items.findIndex(item => item.product.id === product.id);
-        if (existingItemIndex !== -1) {
-            const updatedItems = [...items];
-            const currentQuantity = updatedItems[existingItemIndex].quantity;
-            let newQuantity;
-
-            if (product.unitOfMeasure === 'UNIT') {
-              newQuantity = currentQuantity + 1;
-            } else {
-              // For KG/LITER, if adding from search, default to 1 unit or prompt for input
-              // For simplicity, let's just increment by 1 for now or set to 1 if not present
-              newQuantity = currentQuantity + 1;
+    const addProductToCart = (product: Product, quantity: number = 1) => {
+        setItems(currentItems => {
+            const existingItem = currentItems.find(item => item.product.id === product.id);
+            if (existingItem) {
+                return currentItems.map(item =>
+                    item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                );
             }
-            updatedItems[existingItemIndex] = { ...updatedItems[existingItemIndex], quantity: newQuantity };
-            setItems(updatedItems);
+            return [...currentItems, { product, quantity }];
+        });
+    };
+    
+    const handleQuantityChange = (productId: number, newQuantity: number) => {
+        if (newQuantity > 0) {
+            setItems(items.map(item => item.product.id === productId ? { ...item, quantity: newQuantity } : item));
         } else {
-            setItems([...items, { product: product, quantity: product.unitOfMeasure === 'UNIT' ? 1 : 0.5 }]); // Default to 0.5 for KG/LITER, 1 for UNIT
+            setItems(items.filter(item => item.product.id !== productId));
         }
-        setShowProductSearch(false);
-    }
+    };
+    
+    const handleQuantityBlur = (item: SaleItem<Product>) => {
+        const value = editingQuantity[item.product.id];
+        if (value === undefined) return;
+        const newQuantity = item.product.unitOfMeasure === 'UNIT' ? parseInt(value, 10) : parseFloat(value);
+        if (!isNaN(newQuantity) && newQuantity >= 0) {
+            handleQuantityChange(item.product.id, newQuantity);
+        }
+        setEditingQuantity(prev => {
+            const newState = { ...prev };
+            delete newState[item.product.id];
+            return newState;
+        });
+    };
 
-    const handleSelectCustomer = (customer: Customer) => {
-        setSelectedCustomer(customer);
-        setShowCustomerSearch(false);
-    }
+    const calculateTotal = () => items.reduce((total, item) => total + item.product.salePrice * item.quantity, 0);
 
     const handleSaleComplete = () => {
         setItems([]);
         setSelectedCustomer(null);
         setShowCheckout(false);
-        setLastSalesKey(prevKey => prevKey + 1);
-    }
-
-    return (
-        <Container fluid>
+        setLastSalesKey(prevKey => prevKey + 1); // Refresh sales view if it's open
+    };
+    
+    // --- View Rendering ---
+    const renderPosView = () => (
+        <>
+            <p>Escanea o introduce el código de barras</p>
             <Row>
-                <Col xs={8}>
-                    <h1>{t('dashboard.posScreen')}</h1> {/* Translate POS Screen */}
-                    <Form onSubmit={handleBarcodeSubmit}>
-                        <Form.Group>
-                            <Form.Label>{t('dashboard.barcode')}</Form.Label> {/* Translate Barcode */}
-                            {/* Translate Enter barcode */}
-                            <Form.Control
-                                type="text"
-                                placeholder={t('dashboard.enterBarcode')}
-                                value={barcode}
-                                onChange={handleBarcodeChange}
-                                autoFocus
-                            />
-                        </Form.Group>
+                <Col xs={12} md={7} lg={8}>
+                    <Form onSubmit={handleBarcodeSubmit} className="mb-3">
+                        <InputGroup>
+                            <InputGroup.Text>
+                                <span className="barcode-icon" />
+                            </InputGroup.Text>
+                            <Form.Control size="lg" type="text" placeholder={t('dashboard.enterBarcode')} value={barcode} onChange={e => setBarcode(e.target.value)} autoFocus />
+                        </InputGroup>
                     </Form>
-                    <Button variant="info" className="my-3 me-2" onClick={() => setShowProductSearch(true)}>
-                        {t('dashboard.searchProduct')} {/* Translate Search for Product */}
-                    </Button>
-                    <Button variant="info" className="my-3 me-2" onClick={() => setShowCustomerSearch(true)}>
-                        {t('dashboard.searchCustomer')} {/* Translate Search for Customer */}
-                    </Button>
-                    <Button variant="secondary" className="my-3 me-2" onClick={() => setShowLastSales(true)}>
-                        {t('dashboard.lastSales')} {/* Translate Last Sales */}
-                    </Button>
-                    <Button variant="dark" className="my-3 me-2" onClick={() => setShowSuppliers(true)}>
-                        {t('dashboard.suppliers')} {/* Translate Suppliers */}
-                    </Button>
-                    <Button variant="danger" className="my-3 me-2" onClick={() => setShowUsers(true)}>
-                        {t('dashboard.users')} {/* Translate Users */}
-                    </Button>
-                    <Button variant="success" className="my-3 me-2" onClick={() => setShowProducts(true)}>
-                        {t('dashboard.products')} {/* Translate Products */}
-                    </Button>
-                    <Button variant="primary" className="my-3 me-2" onClick={() => setShowCustomers(true)}>
-                        {t('dashboard.customers')} {/* Translate Customers */}
-                    </Button>
-                    <Button variant="warning" className="my-3" onClick={onLogout}>
-                        {t('dashboard.logout')} {/* Translate Logout */}
-                    </Button>
-                    <Table striped bordered hover className="mt-3">
+                    <div className="d-flex gap-2 mb-3">
+                        <Button variant="primary" onClick={() => setShowProductSearch(true)}>{t('dashboard.searchProduct')}</Button>
+                        <Button variant="info" onClick={() => setShowCustomerSearch(true)}>{t('dashboard.searchCustomer')}</Button>
+                        <Button variant="secondary" onClick={() => setCurrentView('sales')}>{t('dashboard.lastSales')}</Button>
+                    </div>
+                    <Table striped bordered hover responsive>
                         <thead>
                             <tr>
-                                <th>{t('dashboard.barcodeHeader')}</th> {/* Translate Barcode Header */}
-                                <th>{t('dashboard.nameHeader')}</th> {/* Translate Name Header */}
-                                <th>{t('dashboard.unitHeader')}</th> {/* New: Translate Unit Header */}
-                                <th>{t('dashboard.priceHeader')}</th> {/* Translate Price Header */}
-                                <th>{t('dashboard.quantityHeader')}</th> {/* Translate Quantity Header */}
-                                <th>{t('dashboard.subtotalHeader')}</th> {/* Translate Subtotal Header */}
+                                <th>{t('dashboard.nameHeader')}</th>
+                                <th className="text-end">{t('dashboard.priceHeader')}</th>
+                                <th style={{ width: '150px' }}>{t('dashboard.quantityHeader')}</th>
+                                <th className="text-end">{t('dashboard.subtotalHeader')}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {items.map((item, index) => (
-                                <tr key={index}>
-                                    <td>{item.product.barcode}</td>
+                            {items.map(item => (
+                                <tr key={item.product.id}>
                                     <td>{item.product.name}</td>
-                                    <td>{item.product.unitOfMeasure}</td> {/* Display Unit of Measure */}
-                                    <td>${item.product.salePrice.toFixed(2)}</td>
+                                    <td className="text-end">${item.product.salePrice.toFixed(2)}</td>
                                     <td>
-                                      {item.product.unitOfMeasure === 'UNIT' ? (
                                         <div className="d-flex align-items-center">
-                                          <Form.Control
-                                            type="number"
-                                            step="1"
-                                            value={editingQuantity[item.product.id] ?? item.quantity}
-                                            onChange={(e) => setEditingQuantity({ ...editingQuantity, [item.product.id]: e.target.value })}
-                                            onBlur={(e) => {
-                                                const value = e.target.value;
-                                                if (value.trim() !== '') {
-                                                    const newQuantity = parseInt(value, 10);
-                                                    if (!isNaN(newQuantity)) {
-                                                        handleQuantityChange(item.product.id, newQuantity);
-                                                    }
-                                                }
-                                                const newEditingState = { ...editingQuantity };
-                                                delete newEditingState[item.product.id];
-                                                setEditingQuantity(newEditingState);
-                                            }}
-                                            className="mx-1 text-center"
-                                            style={{ width: '60px' }}
-                                          />
+                                            <Form.Control type="number" step={item.product.unitOfMeasure === 'UNIT' ? "1" : "0.001"} value={editingQuantity[item.product.id] ?? item.quantity} onChange={(e) => setEditingQuantity({ ...editingQuantity, [item.product.id]: e.target.value })} onBlur={() => handleQuantityBlur(item)} className="mx-1 text-center quantity-input" />
                                         </div>
-                                      ) : (
-                                        <Form.Control
-                                          type="number"
-                                          step="0.001" // Allow decimal input
-                                          value={editingQuantity[item.product.id] ?? item.quantity}
-                                          onChange={(e) => setEditingQuantity({ ...editingQuantity, [item.product.id]: e.target.value })}
-                                          onBlur={(e) => {
-                                            const value = e.target.value;
-                                            if (value.trim() !== '') {
-                                                const newQuantity = parseFloat(value);
-                                                if (!isNaN(newQuantity)) {
-                                                    handleQuantityChange(item.product.id, newQuantity);
-                                                }
-                                            }
-                                            // Clean up the editing state for this item regardless
-                                            const newEditingState = { ...editingQuantity };
-                                            delete newEditingState[item.product.id];
-                                            setEditingQuantity(newEditingState);
-                                          }}
-                                          className="text-center"
-                                          style={{ width: '80px' }}
-                                        />
-                                      )}
                                     </td>
-                                    <td>${(item.product.salePrice * item.quantity).toFixed(2)}</td>
+                                    <td className="text-end">${(item.product.salePrice * item.quantity).toFixed(2)}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </Table>
                 </Col>
-                <Col xs={4} className="bg-light p-3">
-                    <h2>{t('dashboard.total')}</h2> {/* Translate Total */}
-                    <h3>${calculateTotal().toFixed(2)}</h3>
-                    {selectedCustomer && (
-                        <div>
-                            <h4>{t('dashboard.customer')}: {selectedCustomer.fullName}</h4> {/* Translate Customer */}
-                        </div>
-                    )}
-                    <div className="d-grid">
-                        <Button variant="primary" onClick={() => setShowCheckout(true)} disabled={items.length === 0}>
-                            {t('dashboard.checkout')} {/* Translate Checkout */}
-                        </Button>
-                    </div>
+                <Col xs={12} md={5} lg={4} className="checkout-col">
+                    <Card className="checkout-card">
+                        <Card.Body className="text-center">
+                             <div className="total-display-container">
+                                <Card.Title>{t('dashboard.total')}</Card.Title>
+                                <Card.Text as="div" className="total-display">${calculateTotal().toFixed(2)}</Card.Text>
+                            </div>
+                            {selectedCustomer && <div className="mb-3"><strong>{selectedCustomer.fullName}</strong></div>}
+                            <div className="d-grid">
+                                <Button variant="success" size="lg" onClick={() => setShowCheckout(true)} disabled={items.length === 0}>{t('dashboard.checkout')}</Button>
+                            </div>
+                        </Card.Body>
+                    </Card>
                 </Col>
             </Row>
-            <Modal show={showProductSearch} onHide={() => setShowProductSearch(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('dashboard.searchProduct')}</Modal.Title> {/* Translate Search for Product */}
-                </Modal.Header>
-                <Modal.Body>
-                    <ProductSearch onAddProduct={handleAddProduct} />
-                </Modal.Body>
-            </Modal>
-            <Modal show={showCustomerSearch} onHide={() => setShowCustomerSearch(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('dashboard.searchCustomer')}</Modal.Title> {/* Translate Search for Customer */}
-                </Modal.Header>
-                <Modal.Body>
-                    <CustomerSearch onSelectCustomer={handleSelectCustomer} />
-                </Modal.Body>
-            </Modal>
-            <Modal show={showCheckout} onHide={() => setShowCheckout(false)}>
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('dashboard.checkout')}</Modal.Title> {/* Translate Checkout */}
-                </Modal.Header>
-                <Modal.Body>
-                    <Checkout
-                        items={items.map(item => ({ productId: item.product.id, quantity: item.quantity, price: item.product.salePrice }))}
-                        customer={selectedCustomer}
-                        total={calculateTotal()}
-                        onSaleComplete={handleSaleComplete}
-                    />
-                </Modal.Body>
-            </Modal>
-            <Modal show={showLastSales} onHide={() => setShowLastSales(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('dashboard.lastSales')}</Modal.Title> {/* Translate Last 10 Sales */}
-                </Modal.Header>
-                <Modal.Body>
-                    <LastSales key={lastSalesKey} />
-                </Modal.Body>
-            </Modal>
-            <Modal show={showSuppliers} onHide={() => setShowSuppliers(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('dashboard.suppliers')}</Modal.Title> {/* Translate Suppliers */}
-                </Modal.Header>
-                <Modal.Body>
-                    <SupplierComponent />
-                </Modal.Body>
-            </Modal>
-            <Modal show={showUsers} onHide={() => setShowUsers(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('dashboard.users')}</Modal.Title> {/* Translate Users */}
-                </Modal.Header>
-                <Modal.Body>
-                    <UserComponent />
-                </Modal.Body>
-            </Modal>
-            <Modal show={showProducts} onHide={() => setShowProducts(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('dashboard.products')}</Modal.Title> {/* Translate Products */}
-                </Modal.Header>
-                <Modal.Body>
-                    <ProductComponent />
-                </Modal.Body>
-            </Modal>
-            <Modal show={showCustomers} onHide={() => setShowCustomers(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('dashboard.customers')}</Modal.Title> {/* Translate Customers */}
-                </Modal.Header>
-                <Modal.Body>
-                    <CustomerComponent />
-                </Modal.Body>
-            </Modal>
-        </Container>
+        </>
+    );
+
+    const renderCurrentView = () => {
+        switch (currentView) {
+            case 'pos':       return renderPosView();
+            case 'products':  return <ProductComponent />;
+            case 'customers': return <CustomerComponent />;
+            case 'suppliers': return <SupplierComponent />;
+            case 'sales':     return <LastSales key={lastSalesKey} />;
+            case 'users':     return <UserComponent />;
+            default:          return renderPosView();
+        }
+    };
+
+    return (
+        <div className="dashboard-layout">
+            <Sidebar onSelect={setCurrentView} onLogout={onLogout} setTheme={setTheme} theme={theme} currentView={currentView} />
+            <div className="content-container">
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h1 className="h2">{t('dashboard.posScreen')}</h1>
+                    <Button variant="outline-secondary" onClick={onLogout}>{t('dashboard.logout')}</Button>
+                </div>
+                {renderCurrentView()}
+            </div>
+            
+            {/* Modals for POS view */}
+            <Modal show={showProductSearch} onHide={() => setShowProductSearch(false)} size="lg"><Modal.Header closeButton><Modal.Title>{t('dashboard.searchProduct')}</Modal.Title></Modal.Header><Modal.Body><ProductSearch onAddProduct={(p) => { addProductToCart(p, p.unitOfMeasure === 'UNIT' ? 1 : 0.5); setShowProductSearch(false); }} /></Modal.Body></Modal>
+            <Modal show={showCustomerSearch} onHide={() => setShowCustomerSearch(false)} size="lg"><Modal.Header closeButton><Modal.Title>{t('dashboard.searchCustomer')}</Modal.Title></Modal.Header><Modal.Body><CustomerSearch onSelectCustomer={(c) => { setSelectedCustomer(c); setShowCustomerSearch(false); }} /></Modal.Body></Modal>
+            <Modal show={showCheckout} onHide={() => setShowCheckout(false)}><Modal.Header closeButton><Modal.Title>{t('dashboard.checkout')}</Modal.Title></Modal.Header><Modal.Body><Checkout items={items.map(it => ({ productId: it.product.id, quantity: it.quantity, price: it.product.salePrice }))} customer={selectedCustomer} total={calculateTotal()} onSaleComplete={handleSaleComplete} /></Modal.Body></Modal>
+        </div>
     );
 };
 

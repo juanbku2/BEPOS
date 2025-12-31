@@ -16,7 +16,11 @@
   "common": {
     "language": "Language",
     "english": "English",
-    "spanish": "Spanish"
+    "spanish": "Spanish",
+    "administration": "Administration",
+    "theme": "Theme",
+    "classic": "Classic",
+    "fresh": "Fresh"
   },
   "dashboard": {
     "posScreen": "POS Screen",
@@ -39,6 +43,12 @@
     "total": "Total",
     "customer": "Customer",
     "checkout": "Checkout"
+  },
+  "checkout": {
+    "total": "Total",
+    "cash": "Cash",
+    "credit": "Credit",
+    "debit": "Debit"
   },
   "customerSearch": {
     "searchPlaceholder": "Search for customers by name",
@@ -148,4 +158,3 @@
     "generic": "Error: {{status}}"
   }
 }
-
