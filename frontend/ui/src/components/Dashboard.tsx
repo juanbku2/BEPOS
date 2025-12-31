@@ -32,6 +32,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
     const [showCustomers, setShowCustomers] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [lastSalesKey, setLastSalesKey] = useState(0);
+    const [editingQuantity, setEditingQuantity] = useState<{ [key: number]: string }>({});
 
     const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setBarcode(e.target.value);
@@ -165,26 +166,46 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
                                     <td>
                                       {item.product.unitOfMeasure === 'UNIT' ? (
                                         <div className="d-flex align-items-center">
-                                          <Button variant="outline-secondary" size="sm" onClick={() => handleQuantityChange(item.product.id, item.quantity - 1)}>
-                                            -
-                                          </Button>
                                           <Form.Control
-                                            type="text" // Use text to prevent default number input behavior, or make it readonly
-                                            value={item.quantity}
-                                            readOnly
+                                            type="number"
+                                            step="1"
+                                            value={editingQuantity[item.product.id] ?? item.quantity}
+                                            onChange={(e) => setEditingQuantity({ ...editingQuantity, [item.product.id]: e.target.value })}
+                                            onBlur={(e) => {
+                                                const value = e.target.value;
+                                                if (value.trim() !== '') {
+                                                    const newQuantity = parseInt(value, 10);
+                                                    if (!isNaN(newQuantity)) {
+                                                        handleQuantityChange(item.product.id, newQuantity);
+                                                    }
+                                                }
+                                                const newEditingState = { ...editingQuantity };
+                                                delete newEditingState[item.product.id];
+                                                setEditingQuantity(newEditingState);
+                                            }}
                                             className="mx-1 text-center"
-                                            style={{ width: '50px' }}
+                                            style={{ width: '60px' }}
                                           />
-                                          <Button variant="outline-secondary" size="sm" onClick={() => handleQuantityChange(item.product.id, item.quantity + 1)}>
-                                            +
-                                          </Button>
                                         </div>
                                       ) : (
                                         <Form.Control
                                           type="number"
                                           step="0.001" // Allow decimal input
-                                          value={item.quantity}
-                                          onChange={(e) => handleQuantityChange(item.product.id, Number(e.target.value))}
+                                          value={editingQuantity[item.product.id] ?? item.quantity}
+                                          onChange={(e) => setEditingQuantity({ ...editingQuantity, [item.product.id]: e.target.value })}
+                                          onBlur={(e) => {
+                                            const value = e.target.value;
+                                            if (value.trim() !== '') {
+                                                const newQuantity = parseFloat(value);
+                                                if (!isNaN(newQuantity)) {
+                                                    handleQuantityChange(item.product.id, newQuantity);
+                                                }
+                                            }
+                                            // Clean up the editing state for this item regardless
+                                            const newEditingState = { ...editingQuantity };
+                                            delete newEditingState[item.product.id];
+                                            setEditingQuantity(newEditingState);
+                                          }}
                                           className="text-center"
                                           style={{ width: '80px' }}
                                         />
