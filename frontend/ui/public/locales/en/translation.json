@@ -28,7 +28,7 @@
     "enterBarcode": "Enter barcode",
     "searchProduct": "Search for Product",
     "searchCustomer": "Search for Customer",
-    "lastSales": "Last Sales",
+    "reports": "Reports",
     "suppliers": "Suppliers",
     "users": "Users",
     "products": "Products",
@@ -134,7 +134,16 @@
     "unitOfMeasureLabel": "Unit of Measure",
     "unitOfMeasureHeader": "Unit",
     "closeButton": "Close",
-    "saveChangesButton": "Save Changes"
+    "saveChangesButton": "Save Changes",
+    "units": {
+      "kg": "kg",
+      "liter": "lt",
+      "unit": "unit"
+    },
+    "lowStock": "Low Stock",
+    "productInfo": "Product Information",
+    "inventoryInfo": "Inventory Information",
+    "initialStock": "Initial Stock"
   },
   "customer": {
     "newCustomer": "New Customer",
@@ -160,5 +169,45 @@
     "serverError": "Internal server error. Please try again later.",
     "networkError": "Network error. Could not connect to the server.",
     "generic": "Error: {{status}}"
+  },
+  "cashRegister": {
+    "loading": "Loading...",
+    "close": "Close Cash Register",
+    "open": "Open Cash Register",
+    "openTitle": "Open Cash Register",
+    "openingBalance": "Opening Balance",
+    "closeTitle": "Close Cash Register",
+    "closingBalance": "Closing Balance",
+    "closedMessage": "Cash register is closed. Please open it to start selling.",
+    "totalSales": "Total Sales",
+    "totalCash": "Total Cash",
+    "totalCard": "Total Card"
+  },
+  "buttons": {
+    "cancel": "Cancel"
+  },
+  "inventory": {
+    "adjustStockTitle": "Adjust Stock",
+    "quantity": "Quantity",
+    "quantityPlaceholder": "e.g., 10 or -5",
+    "movementType": "Movement Type",
+"adjustButton": "Adjust",
+    "historyTitle": "Inventory History",
+    "loadingHistory": "Loading history...",
+    "history": {
+      "date": "Date",
+      "user": "User",
+      "type": "Type",
+      "quantity": "Quantity",
+      "reason": "Reason"
+    },
+    "types": {
+      "restock": "Restock",
+      "manualAdjustment": "Manual Adjustment",
+      "loss": "Loss/Damage",
+      "initial": "Initial Stock",
+      "sale": "Sale",
+      "return": "Return"
+    }
   }
 }

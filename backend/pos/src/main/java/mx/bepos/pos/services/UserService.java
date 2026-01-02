@@ -8,6 +8,7 @@ import mx.bepos.pos.web.dto.AdminChangePasswordRequest;
 import mx.bepos.pos.web.dto.ChangeOwnPasswordRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,5 +82,14 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         log.info("Admin changed password successfully for user: {}", user.getUsername());
+    }
+    @Transactional(readOnly = true)
+    public Optional<User> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return Optional.empty();
+        }
+        String username = authentication.getName();
+        return userRepository.findByUsername(username);
     }
 }

@@ -2,103 +2,64 @@ package mx.bepos.pos.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mx.bepos.pos.domain.*;
+import mx.bepos.pos.domain.InventoryMovement;
+import mx.bepos.pos.domain.MovementType;
+import mx.bepos.pos.domain.Product;
+import mx.bepos.pos.domain.User;
 import mx.bepos.pos.domain.repositories.InventoryMovementRepository;
-import mx.bepos.pos.domain.repositories.InventoryRepository;
 import mx.bepos.pos.domain.repositories.ProductRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import mx.bepos.pos.web.dto.InventoryHistoryResponse;
+import mx.bepos.pos.web.dto.StockAdjustmentRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class InventoryServiceImpl implements InventoryService {
 
-    private final InventoryRepository inventoryRepository;
     private final InventoryMovementRepository inventoryMovementRepository;
     private final ProductRepository productRepository;
-    // TODO: Make negative stock configurable
-    private final boolean allowNegativeStock = true;
-
-    @Override
-    @Transactional(readOnly = true)
-    public Inventory getStock(Integer productId) {
-        return inventoryRepository.findByProductId(productId)
-                .orElseThrow(() -> new RuntimeException("Inventory not found for product id: " + productId));
-    }
+    private final UserService userService; // To get current user
 
     @Override
     @Transactional
-    public Inventory increaseStock(Integer productId, BigDecimal quantity, String reason, Integer referenceId) {
-        return updateStock(productId, quantity, MovementType.PURCHASE, reason, referenceId);
-    }
+    public void adjustStock(StockAdjustmentRequest request) {
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + request.getProductId()));
 
-    @Override
-    @Transactional
-    public Inventory decreaseStock(Integer productId, BigDecimal quantity, String reason, Integer referenceId) {
-        return updateStock(productId, quantity.negate(), MovementType.SALE, reason, referenceId);
-    }
-
-    @Override
-    @Transactional
-    public Inventory adjustStock(Integer productId, BigDecimal quantity, String reason) {
-        return updateStock(productId, quantity, MovementType.ADJUSTMENT, reason, null);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<InventoryMovement> getMovements(Integer productId) {
-        return inventoryMovementRepository.findByProductId(productId);
-    }
-
-    private Inventory updateStock(Integer productId, BigDecimal quantity, MovementType type, String reason, Integer referenceId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
-
-        Inventory inventory = inventoryRepository.findByProductId(productId)
-                .orElseGet(() -> {
-                    log.info("No inventory record found for product id: {}. Creating a new one.", productId);
-                    Inventory newInventory = new Inventory();
-                    newInventory.setProduct(product);
-                    newInventory.setQuantity(BigDecimal.ZERO);
-                    return newInventory;
-                });
-
-        BigDecimal newQuantity = inventory.getQuantity().add(quantity);
-
-        if (newQuantity.compareTo(BigDecimal.ZERO) < 0 && !allowNegativeStock) {
-            throw new RuntimeException("Not enough stock for product: " + product.getName() + ". Requested: " + quantity.abs() + ", Available: " + inventory.getQuantity());
-        } else if (newQuantity.compareTo(BigDecimal.ZERO) < 0) {
-            log.warn("Stock for product {} is negative: {}", product.getName(), newQuantity);
+        // Validate reason for specific movement types
+        if ((request.getMovementType() == MovementType.LOSS || request.getMovementType() == MovementType.MANUAL_ADJUSTMENT)
+                && (request.getReason() == null || request.getReason().trim().isEmpty())) {
+            throw new IllegalArgumentException("Reason is required for " + request.getMovementType() + " movements.");
         }
 
-        inventory.setQuantity(newQuantity);
-        inventory.setUpdatedAt(LocalDateTime.now());
-        Inventory savedInventory = inventoryRepository.save(inventory);
+        User currentUser = userService.getCurrentUser().orElseThrow(() -> new RuntimeException("Authenticated user not found"));
 
         InventoryMovement movement = new InventoryMovement();
         movement.setProduct(product);
-        movement.setMovementType(type);
-        movement.setQuantity(quantity);
-        movement.setReason(reason);
-        movement.setReferenceId(referenceId);
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof User) {
-            movement.setCreatedBy((User) authentication.getPrincipal());
-        } else if (authentication != null) {
-            log.warn("Authenticated principal is not an instance of mx.bepos.pos.domain.User: {}", authentication.getPrincipal().getClass().getName());
-        }
-
+        movement.setMovementType(request.getMovementType());
+        movement.setQuantity(request.getQuantity());
+        movement.setReason(request.getReason());
+        movement.setCreatedAt(LocalDateTime.now());
+        movement.setCreatedBy(currentUser);
 
         inventoryMovementRepository.save(movement);
+        log.info("Stock adjusted for product {} ({}): {} quantity, reason: {}", product.getName(), request.getProductId(), request.getQuantity(), request.getReason());
+    }
 
-        return savedInventory;
+    @Override
+    @Transactional(readOnly = true)
+    public List<InventoryHistoryResponse> getInventoryHistory(Integer productId) {
+        productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+
+        return inventoryMovementRepository.findByProductId(productId).stream()
+                .map(InventoryHistoryResponse::from)
+                .collect(Collectors.toList());
     }
 }

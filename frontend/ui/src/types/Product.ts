@@ -6,8 +6,9 @@ export interface Product {
   name: string;
   purchasePrice: number;
   salePrice: number;
-  stockQuantity: number;
-  minStockAlert: number;
-  unitOfMeasure: 'KG' | 'LITER' | 'UNIT';
+  stock: number; // Changed from stockQuantity
+  minStock: number; // Changed from minStockAlert
+  lowStock: boolean; // New field
+  unitOfMeasure?: 'KG' | 'LITER' | 'UNIT'; // Made optional
   supplier: Supplier | null;
 }

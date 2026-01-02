@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
-import axios from '../api/axios';
+import instance from '../api/axios'; // Import the configured axios instance
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
@@ -17,7 +17,7 @@ const Login = ({ onLogin }: LoginProps) => {
 
   const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    axios.post('/api/v1/auth/authenticate', { loginIdentifier: username, password })
+    instance.post('/auth/authenticate', { loginIdentifier: username, password }) // Use instance and remove /api/v1
       .then(response => {
         localStorage.setItem('token', response.data.token);
         onLogin();

@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import i18n from '../i18n';
 
 const instance = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: 'http://localhost:8080/api/v1/',
   headers: {
     "Content-Type": "application/json",
   },
@@ -61,4 +61,33 @@ instance.interceptors.response.use(
   }
 );
 
+import { CashRegister, OpenRegisterRequest, CloseRegisterRequest, CloseCashRegisterResponse, CurrentCashRegisterResponse } from '../types/CashRegister';
+
+export const getCurrentCashRegister = async (): Promise<CurrentCashRegisterResponse> => {
+    const response = await instance.get<CurrentCashRegisterResponse>('/cash-register/current');
+    return response.data;
+};
+
+export const openCashRegister = async (request: OpenRegisterRequest): Promise<CashRegister> => {
+    const response = await instance.post<CashRegister>('/cash-register/open', request);
+    return response.data;
+};
+
+export const closeCashRegister = async (request: CloseRegisterRequest): Promise<CloseCashRegisterResponse> => {
+    const response = await instance.post<CloseCashRegisterResponse>('/cash-register/close', request);
+    return response.data;
+};
+
 export default instance;
+
+import { InventoryMovement, StockAdjustmentRequest, InventoryHistoryResponse } from '../types/Inventory';
+
+export const adjustStock = async (request: StockAdjustmentRequest): Promise<void> => {
+    await instance.post('/inventory/adjust', request);
+};
+
+export const getInventoryHistory = async (productId: number): Promise<InventoryHistoryResponse[]> => {
+    const response = await instance.get<InventoryHistoryResponse[]>(`/inventory/history?productId=${productId}`);
+    return response.data;
+};
+

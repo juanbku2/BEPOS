@@ -23,7 +23,7 @@ public class CashMovementServiceImpl implements CashMovementService {
 
     private final CashMovementRepository cashMovementRepository;
     private final CashRegisterService cashRegisterService;
-    private final UserRepository userRepository;
+    private final UserService userService; // Inject UserService
 
     @Override
     @Transactional
@@ -38,8 +38,9 @@ public class CashMovementServiceImpl implements CashMovementService {
     }
 
     private CashMovement createCashMovement(BigDecimal amount, String reason, CashMovementType type) {
-        CashRegisterClosure openRegister = cashRegisterService.getOpenRegister();
-        User user = getCurrentUser().orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+        CashRegisterClosure openRegister = cashRegisterService.getCurrentCashRegister()
+                .orElseThrow(() -> new IllegalStateException("No open cash register found to record cash movement."));
+        User user = userService.getCurrentUser().orElseThrow(() -> new RuntimeException("Authenticated user not found"));
 
         CashMovement cashMovement = new CashMovement();
         cashMovement.setCashRegister(openRegister);
@@ -50,14 +51,5 @@ public class CashMovementServiceImpl implements CashMovementService {
 
         log.info("Creating cash movement: {} of {} for reason: {}", type, amount, reason);
         return cashMovementRepository.save(cashMovement);
-    }
-
-    private Optional<User> getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            return Optional.empty();
-        }
-        String username = authentication.getName();
-        return userRepository.findByUsername(username);
     }
 }

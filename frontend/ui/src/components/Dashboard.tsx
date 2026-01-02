@@ -1,6 +1,8 @@
+import { useCashRegister } from '../context/CashRegisterContext';
+import { Alert } from 'react-bootstrap';
 import { useState } from 'react';
 import { Container, Row, Col, Form, Table, Button, Modal, Card, InputGroup } from 'react-bootstrap';
-import axios from '../api/axios';
+import instance from '../api/axios'; // Import the configured axios instance
 
 // Import Components
 import Sidebar from './Sidebar';
@@ -31,6 +33,8 @@ interface DashboardProps {
 
 const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     const { t } = useTranslation();
+    const { status: cashRegisterStatus } = useCashRegister();
+    const isCashRegisterClosed = cashRegisterStatus === 'CLOSED';
     const [currentView, setCurrentView] = useState('pos');
 
     // POS-specific states
@@ -51,8 +55,8 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     // --- Data Handling Functions ---
     const handleBarcodeSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!barcode) return;
-        axios.get(`/api/v1/products/barcode/${barcode}`)
+        if (!barcode || isCashRegisterClosed) return;
+        instance.get(`/products/barcode/${barcode}`) // Use instance and remove /api/v1
             .then(response => addProductToCart(response.data))
             .catch(error => console.error(`Error fetching product with barcode ${barcode}:`, error));
         setBarcode('');
@@ -163,6 +167,11 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     
     const renderPosView = () => (
         <>
+            {isCashRegisterClosed && (
+                <Alert variant="warning">
+                    {t('cashRegister.closedMessage')}
+                </Alert>
+            )}
             <p>Escanea o introduce el código de barras</p>
             <Row>
                 <Col xs={12} md={7} lg={8}>
@@ -171,13 +180,13 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
                             <InputGroup.Text>
                                 <span className="barcode-icon" />
                             </InputGroup.Text>
-                            <Form.Control size="lg" type="text" placeholder={t('dashboard.enterBarcode')} value={barcode} onChange={e => setBarcode(e.target.value)} autoFocus />
+                            <Form.Control size="lg" type="text" placeholder={t('dashboard.enterBarcode')} value={barcode} onChange={e => setBarcode(e.target.value)} autoFocus disabled={isCashRegisterClosed} />
                         </InputGroup>
                     </Form>
                     <div className="d-flex gap-2 mb-3">
-                        <Button variant="primary" onClick={() => setShowProductSearch(true)}>{t('dashboard.searchProduct')}</Button>
-                        <Button variant="info" onClick={() => setShowCustomerSearch(true)}>{t('dashboard.searchCustomer')}</Button>
-                        <Button variant="secondary" onClick={() => setCurrentView('sales')}>{t('dashboard.lastSales')}</Button>
+                        <Button variant="primary" onClick={() => setShowProductSearch(true)} disabled={isCashRegisterClosed}>{t('dashboard.searchProduct')}</Button>
+                        <Button variant="info" onClick={() => setShowCustomerSearch(true)} disabled={isCashRegisterClosed}>{t('dashboard.searchCustomer')}</Button>
+                        <Button variant="secondary" onClick={() => setCurrentView('sales')}>{t('dashboard.reports')}</Button>
                     </div>
                     <Table striped bordered hover responsive>
                         <thead>
@@ -195,9 +204,9 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
                                     <td className="text-end">${item.product.salePrice.toFixed(2)}</td>
                                     <td>
                                         <div className="d-flex align-items-center">
-                                            <Button size="sm" className="quantity-btn" variant="outline-secondary" onClick={() => handleStepChange(item, item.product.unitOfMeasure === 'UNIT' ? -1 : -0.01)}>-</Button>
-                                            <Form.Control type="number" step={item.product.unitOfMeasure === 'UNIT' ? "1" : "0.001"} value={editingQuantity[item.product.id] ?? item.quantity} onChange={(e) => setEditingQuantity({ ...editingQuantity, [item.product.id]: e.target.value })} onBlur={() => handleQuantityBlur(item)} className="mx-1 text-center quantity-input" />
-                                            <Button size="sm" className="quantity-btn" variant="outline-secondary" onClick={() => handleStepChange(item, item.product.unitOfMeasure === 'UNIT' ? 1 : 0.01)}>+</Button>
+                                            <Button size="sm" className="quantity-btn" variant="outline-secondary" onClick={() => handleStepChange(item, item.product.unitOfMeasure === 'UNIT' ? -1 : -0.01)} disabled={isCashRegisterClosed}>-</Button>
+                                            <Form.Control type="number" step={item.product.unitOfMeasure === 'UNIT' ? "1" : "0.001"} value={editingQuantity[item.product.id] ?? item.quantity} onChange={(e) => setEditingQuantity({ ...editingQuantity, [item.product.id]: e.target.value })} onBlur={() => handleQuantityBlur(item)} className="mx-1 text-center quantity-input" disabled={isCashRegisterClosed} />
+                                            <Button size="sm" className="quantity-btn" variant="outline-secondary" onClick={() => handleStepChange(item, item.product.unitOfMeasure === 'UNIT' ? 1 : 0.01)} disabled={isCashRegisterClosed}>+</Button>
                                         </div>
                                     </td>
                                     <td className="text-end">${(item.product.salePrice * item.quantity).toFixed(2)}</td>
@@ -215,7 +224,7 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
                             </div>
                             {selectedCustomer && <div className="mb-3"><strong>{selectedCustomer.fullName}</strong></div>}
                             <div className="d-grid">
-                                <Button variant="success" size="lg" onClick={handleOpenCheckout} disabled={items.length === 0}>{t('dashboard.checkout')}</Button>
+                                <Button variant="success" size="lg" onClick={handleOpenCheckout} disabled={items.length === 0 || isCashRegisterClosed}>{t('dashboard.checkout')}</Button>
                             </div>
                         </Card.Body>
                     </Card>

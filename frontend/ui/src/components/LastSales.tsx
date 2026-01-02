@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table } from 'react-bootstrap';
-import axios from '../api/axios';
+import instance from '../api/axios'; // Import the configured axios instance
 import { Sale } from '../types/Sale';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
@@ -9,7 +9,7 @@ const LastSales = () => {
   const [sales, setSales] = useState<Sale[]>([]);
 
   useEffect(() => {
-    axios.get('/api/v1/sales?limit=10')
+    instance.get('/sales?limit=10') // Use instance and remove /api/v1
       .then(response => {
         setSales(response.data);
       })

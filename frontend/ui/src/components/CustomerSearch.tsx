@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Form, Table, Button, InputGroup } from 'react-bootstrap';
-import axios from '../api/axios';
+import instance from '../api/axios'; // Import the configured axios instance
 import { Customer } from '../types/Customer';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
@@ -19,7 +19,7 @@ const CustomerSearch = ({ onSelectCustomer }: CustomerSearchProps) => {
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    axios.get(`/api/v1/customers?name=${searchTerm}`)
+    instance.get(`/customers?name=${searchTerm}`) // Use instance and remove /api/v1
       .then(response => {
         setCustomers(response.data);
       })

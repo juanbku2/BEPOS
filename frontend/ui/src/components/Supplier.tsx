@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form } from 'react-bootstrap';
-import axios from '../api/axios';
+import instance from '../api/axios'; // Import the configured axios instance
 import { Supplier } from '../types/Supplier';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
@@ -16,7 +16,7 @@ const SupplierComponent = () => {
   }, []);
 
   const fetchSuppliers = () => {
-    axios.get('/api/v1/suppliers')
+    instance.get('/suppliers') // Use instance and remove /api/v1
       .then(response => {
         setSuppliers(response.data);
       })
@@ -31,9 +31,9 @@ const SupplierComponent = () => {
 
   const handleSave = () => {
     const method = form.id ? 'put' : 'post';
-    const url = form.id ? `/api/v1/suppliers/${form.id}` : '/api/v1/suppliers';
+    const url = form.id ? `/suppliers/${form.id}` : '/suppliers'; // Remove /api/v1
 
-    axios[method](url, form)
+    instance[method](url, form) // Use instance
       .then(() => {
         fetchSuppliers();
         setShowModal(false);
@@ -49,7 +49,7 @@ const SupplierComponent = () => {
   };
 
   const handleDelete = (id: number) => {
-    axios.delete(`/api/v1/suppliers/${id}`)
+    instance.delete(`/suppliers/${id}`) // Use instance and remove /api/v1
       .then(() => {
         fetchSuppliers();
       })

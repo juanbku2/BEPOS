@@ -1,16 +1,35 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form } from 'react-bootstrap';
+import { Table, Button, Modal, Form, Badge, Dropdown } from 'react-bootstrap';
 import axios from '../api/axios';
 import { Product } from '../types/Product';
 import { Supplier } from '../types/Supplier';
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useTranslation } from 'react-i18next';
+import StockAdjustmentModal from './StockAdjustmentModal';
+import InventoryHistoryModal from './InventoryHistoryModal';
+
+// Temporary type for form as ProductRequest
+interface ProductFormType {
+  id?: number;
+  name: string;
+  barcode: string;
+  purchasePrice: number;
+  salePrice: number;
+  initialStock?: number; // Only for creation
+  minStock: number;
+  unitOfMeasure?: 'KG' | 'LITER' | 'UNIT'; // Made optional
+  supplierId?: number | null; // Changed to supplierId
+}
+
 
 const ProductComponent = () => {
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<Product>({ id: 0, name: '', barcode: '', purchasePrice: 0, salePrice: 0, stockQuantity: 0, minStockAlert: 0, supplier: null });
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [form, setForm] = useState<ProductFormType>({ name: '', barcode: '', purchasePrice: 0, salePrice: 0, minStock: 0, unitOfMeasure: 'UNIT', initialStock: 0 });
 
   useEffect(() => {
     fetchProducts();
@@ -18,7 +37,7 @@ const ProductComponent = () => {
   }, []);
 
   const fetchProducts = () => {
-    axios.get('/api/v1/products')
+    axios.get<Product[]>('/products') // Now expects Product[] (which is ProductResponse)
       .then(response => {
         setProducts(response.data);
       })
@@ -28,7 +47,7 @@ const ProductComponent = () => {
   };
 
   const fetchSuppliers = () => {
-    axios.get('/api/v1/suppliers')
+    axios.get<Supplier[]>('/suppliers')
       .then(response => {
         setSuppliers(response.data);
       })
@@ -47,29 +66,26 @@ const ProductComponent = () => {
 
   const handleSupplierChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const supplierId = parseInt(e.target.value, 10);
-    const supplier = suppliers.find(s => s.id === supplierId);
-    setForm({ ...form, supplier: supplier || null });
+    setForm({ ...form, supplierId: supplierId || null });
   };
 
   const handleSave = () => {
-    const method = form.id ? 'put' : 'post';
-    const url = form.id ? `/api/v1/products/${form.id}` : '/api/v1/products';
+    const isNew = form.id === undefined || form.id === 0;
+    const method = isNew ? 'post' : 'put';
+    const url = isNew ? '/products' : `/products/${form.id}`;
 
-    // Ensure unitOfMeasure is sent as a string, e.g., "UNIT"
-    const productData = {
-      ...form,
-      purchasePrice: Number(form.purchasePrice) || 0,
-      salePrice: Number(form.salePrice) || 0,
-      stockQuantity: Number(form.stockQuantity) || 0,
-      minStockAlert: Number(form.minStockAlert) || 0,
-      unitOfMeasure: form.unitOfMeasure || 'UNIT', // Ensure default 'UNIT' if not set
-      supplierId: form.supplier?.id || null // Send supplier ID if available
+    const productRequestData = {
+        name: form.name,
+        barcode: form.barcode,
+        purchasePrice: form.purchasePrice,
+        salePrice: form.salePrice,
+        minStock: form.minStock,
+        unitOfMeasure: form.unitOfMeasure,
+        supplierId: form.supplierId,
+        ...(isNew && { initialStock: form.initialStock }) // Only send initialStock on create
     };
     
-    // Remove supplier object to avoid circular reference or unnecessary data in request body
-    delete productData.supplier;
-
-    axios[method](url, productData)
+    axios[method](url, productRequestData)
       .then(() => {
         fetchProducts();
         setShowModal(false);
@@ -80,12 +96,22 @@ const ProductComponent = () => {
   };
 
   const handleEdit = (product: Product) => {
-    setForm(product);
+    setForm({
+        id: product.id,
+        name: product.name,
+        barcode: product.barcode,
+        purchasePrice: product.purchasePrice,
+        salePrice: product.salePrice,
+        minStock: product.minStock,
+        unitOfMeasure: product.unitOfMeasure,
+        supplierId: product.supplier?.id || null, // Access supplier via product if available
+    });
+    setSelectedProduct(product); // Set selected product for modals
     setShowModal(true);
   };
 
   const handleDelete = (id: number) => {
-    axios.delete(`/api/v1/products/${id}`)
+    axios.delete(`/products/${id}`)
       .then(() => {
         fetchProducts();
       })
@@ -95,43 +121,61 @@ const ProductComponent = () => {
   };
 
   const handleNew = () => {
-    setForm({ id: 0, name: '', barcode: '', purchasePrice: 0, salePrice: 0, stockQuantity: 0, minStockAlert: 0, supplier: null, unitOfMeasure: 'UNIT' });
+    setForm({ name: '', barcode: '', purchasePrice: 0, salePrice: 0, minStock: 0, unitOfMeasure: 'UNIT', initialStock: 0 });
+    setSelectedProduct(null); // Clear selected product for new form
     setShowModal(true);
   };
+  
+  const handleOpenAdjust = (product: Product) => {
+    setSelectedProduct(product);
+    setShowAdjustModal(true);
+  }
+
+  const handleOpenHistory = (product: Product) => {
+    setSelectedProduct(product);
+    setShowHistoryModal(true);
+  }
 
   return (
     <div>
       <Button variant="primary" onClick={handleNew} className="mb-3">
-        {t('product.newProduct')} {/* Translate New Product */}
+        {t('product.newProduct')}
       </Button>
-      <Table striped bordered hover>
+      <Table striped bordered hover responsive>
         <thead>
           <tr>
-            <th>{t('product.nameHeader')}</th> {/* Translate Name */}
-            <th>{t('product.barcodeHeader')}</th> {/* Translate Barcode */}
-            <th>{t('product.salePriceHeader')}</th> {/* Translate Sale Price */}
-            <th>{t('product.stockHeader')}</th> {/* Translate Stock */}
-            <th>{t('product.unitOfMeasureHeader')}</th> {/* New: Translate Unit of Measure Header */}
-            <th>{t('product.supplierHeader')}</th> {/* Translate Supplier */}
-            <th>{t('product.actionsHeader')}</th> {/* Translate Actions */}
+            <th>{t('product.nameHeader')}</th>
+            <th>{t('product.barcodeHeader')}</th>
+            <th>{t('product.salePriceHeader')}</th>
+            <th>{t('product.stockHeader')}</th>
+            <th>{t('product.actionsHeader')}</th>
           </tr>
         </thead>
         <tbody>
           {products.map((product) => (
-            <tr key={product.id}>
+            <tr key={product.id} className={product.lowStock ? 'table-danger' : ''}>
               <td>{product.name}</td>
               <td>{product.barcode}</td>
               <td>${product.salePrice.toFixed(2)}</td>
-              <td>{product.stockQuantity}</td>
-              <td>{product.unitOfMeasure}</td> {/* New: Display Unit of Measure */}
-              <td>{product.supplier?.name}</td>
               <td>
-                <Button variant="warning" onClick={() => handleEdit(product)} className="me-2">
-                  {t('product.editButton')} {/* Translate Edit */}
-                </Button>
-                <Button variant="danger" onClick={() => handleDelete(product.id)}>
-                  {t('product.deleteButton')} {/* Translate Delete */}
-                </Button>
+                {product.stock} {product.unitOfMeasure ? t(`product.units.${product.unitOfMeasure.toLowerCase()}` as any) : ''}
+                {product.lowStock && 
+                  <Badge bg="danger" className="ms-2">{t('product.lowStock')}</Badge>
+                }
+              </td>
+              <td>
+                <Dropdown>
+                  <Dropdown.Toggle variant="secondary" size="sm">
+                    {t('product.actionsHeader')}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item onClick={() => handleEdit(product)}>{t('product.editButton')}</Dropdown.Item>
+                    <Dropdown.Item onClick={() => handleOpenAdjust(product)}>{t('inventory.adjustStockTitle')}</Dropdown.Item>
+                    <Dropdown.Item onClick={() => handleOpenHistory(product)}>{t('inventory.historyTitle')}</Dropdown.Item>
+                    <Dropdown.Divider />
+                    <Dropdown.Item onClick={() => handleDelete(product.id)} className="text-danger">{t('product.deleteButton')}</Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
               </td>
             </tr>
           ))}
@@ -140,46 +184,32 @@ const ProductComponent = () => {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{t(form.id ? 'product.editProduct' : 'product.newProduct')}</Modal.Title> {/* Translate Edit/New Product */}
+          <Modal.Title>{t(form.id ? 'product.editProduct' : 'product.newProduct')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
-            <Form.Group>
-              <Form.Label>{t('product.nameLabel')}</Form.Label> {/* Translate Name */}
+            <h5>{t('product.productInfo')}</h5>
+            <hr/>
+            <Form.Group className="mb-3">
+              <Form.Label>{t('product.nameLabel')}</Form.Label>
               <Form.Control type="text" name="name" value={form.name} onChange={handleInputChange} />
             </Form.Group>
-            <Form.Group>
-              <Form.Label>{t('product.barcodeLabel')}</Form.Label> {/* Translate Barcode */}
+            <Form.Group className="mb-3">
+              <Form.Label>{t('product.barcodeLabel')}</Form.Label>
               <Form.Control type="text" name="barcode" value={form.barcode} onChange={handleInputChange} />
             </Form.Group>
-            <Form.Group>
-              <Form.Label>{t('product.purchasePriceLabel')}</Form.Label> {/* Translate Purchase Price */}
+            <Form.Group className="mb-3">
+              <Form.Label>{t('product.purchasePriceLabel')}</Form.Label>
               <Form.Control type="number" name="purchasePrice" value={form.purchasePrice} onChange={handleInputChange} />
             </Form.Group>
-            <Form.Group>
-              <Form.Label>{t('product.salePriceLabel')}</Form.Label> {/* Translate Sale Price */}
+            <Form.Group className="mb-3">
+              <Form.Label>{t('product.salePriceLabel')}</Form.Label>
               <Form.Control type="number" name="salePrice" value={form.salePrice} onChange={handleInputChange} />
             </Form.Group>
-            <Form.Group>
-              <Form.Label>{t('product.stockQuantityLabel')}</Form.Label> {/* Translate Stock Quantity */}
-              <Form.Control type="number" name="stockQuantity" value={form.stockQuantity} onChange={handleInputChange} />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>{t('product.minStockAlertLabel')}</Form.Label> {/* Translate Min Stock Alert */}
-              <Form.Control type="number" name="minStockAlert" value={form.minStockAlert} onChange={handleInputChange} />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>{t('product.unitOfMeasureLabel')}</Form.Label> {/* Translate Unit of Measure */}
-              <Form.Select name="unitOfMeasure" value={form.unitOfMeasure || 'UNIT'} onChange={handleInputChange}>
-                <option value="KG">KG</option>
-                <option value="LITER">LITER</option>
-                <option value="UNIT">UNIT</option>
-              </Form.Select>
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>{t('product.supplierLabel')}</Form.Label> {/* Translate Supplier */}
-              <Form.Select value={form.supplier?.id || ''} onChange={handleSupplierChange}>
-                <option>{t('product.selectSupplier')}</option> {/* Translate Select a supplier */}
+            <Form.Group className="mb-3">
+              <Form.Label>{t('product.supplierLabel')}</Form.Label>
+              <Form.Select name="supplierId" value={form.supplierId || ''} onChange={handleSupplierChange}>
+                <option value="">{t('product.selectSupplier')}</option>
                 {suppliers.map(supplier => (
                   <option key={supplier.id} value={supplier.id}>
                     {supplier.name}
@@ -187,19 +217,45 @@ const ProductComponent = () => {
                 ))}
               </Form.Select>
             </Form.Group>
+            <Form.Group className="mb-3">
+                <Form.Label>{t('product.unitOfMeasureLabel')}</Form.Label>
+                <Form.Select name="unitOfMeasure" value={form.unitOfMeasure || 'UNIT'} onChange={handleInputChange}>
+                    <option value="KG">KG</option>
+                    <option value="LITER">LITER</option>
+                    <option value="UNIT">UNIT</option>
+                </Form.Select>
+            </Form.Group>
+            
+            <h5 className="mt-4">{t('product.inventoryInfo')}</h5>
+            <hr/>
+            {!form.id && (
+              <Form.Group className="mb-3">
+                <Form.Label>{t('product.initialStock')}</Form.Label>
+                <Form.Control type="number" name="initialStock" value={form.initialStock} onChange={handleInputChange} />
+              </Form.Group>
+            )}
+            <Form.Group className="mb-3">
+              <Form.Label>{t('product.minStockAlertLabel')}</Form.Label>
+              <Form.Control type="number" name="minStock" value={form.minStock} onChange={handleInputChange} />
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            {t('product.closeButton')} {/* Translate Close */}
+            {t('buttons.cancel')}
           </Button>
           <Button variant="primary" onClick={handleSave}>
-            {t('product.saveChangesButton')} {/* Translate Save Changes */}
+            {t('product.saveChangesButton')}
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <StockAdjustmentModal show={showAdjustModal} onHide={() => setShowAdjustModal(false)} product={selectedProduct} onAdjust={fetchProducts} />
+      <InventoryHistoryModal show={showHistoryModal} onHide={() => setShowHistoryModal(false)} product={selectedProduct} />
+
     </div>
   );
 };
 
 export default ProductComponent;
+

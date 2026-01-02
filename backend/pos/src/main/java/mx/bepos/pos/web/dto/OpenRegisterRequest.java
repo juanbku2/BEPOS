@@ -8,5 +8,5 @@ import java.math.BigDecimal;
 @Data
 public class OpenRegisterRequest {
     @NotNull
-    private BigDecimal initialCash;
+    private BigDecimal openingAmount;
 }

@@ -5,15 +5,15 @@ import lombok.extern.slf4j.Slf4j;
 import mx.bepos.pos.domain.*;
 import mx.bepos.pos.domain.repositories.*;
 import mx.bepos.pos.web.dto.SaleRequest;
+import mx.bepos.pos.web.dto.StockAdjustmentRequest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +31,7 @@ public class SaleService {
     private final InventoryService inventoryService;
     private final CashRegisterService cashRegisterService;
     private final UserRepository userRepository;
-
+    private final UserService userService; // Inject UserService
 
     @Transactional(readOnly = true)
     public List<Sale> getLastSales(int limit) {
@@ -43,10 +43,12 @@ public class SaleService {
     @Transactional
     public Sale createSale(SaleRequest saleRequest) {
         log.info("Creating sale: {}", saleRequest);
-        
-        User user = getCurrentUser().orElseThrow(() -> new RuntimeException("Authenticated user not found"));
 
-        CashRegisterClosure openRegister = cashRegisterService.getOpenRegister();
+        // 1. Validate there is an OPEN cash register
+        CashRegisterClosure openRegister = cashRegisterService.getCurrentCashRegister()
+                .orElseThrow(() -> new IllegalStateException("Cash register is closed"));
+        
+        User user = userService.getCurrentUser().orElseThrow(() -> new RuntimeException("Authenticated user not found"));
 
         Sale sale = new Sale();
         sale.setPaymentMethod(saleRequest.getPaymentMethod());
@@ -75,8 +77,13 @@ public class SaleService {
                         return new RuntimeException("Product not found");
                     });
 
-            // Decrease stock using InventoryService
-            inventoryService.decreaseStock(product.getId(), itemRequest.getQuantity(), "SALE", savedSale.getId());
+            // Decrease stock using InventoryService.adjustStock
+            StockAdjustmentRequest stockAdjustmentRequest = new StockAdjustmentRequest();
+            stockAdjustmentRequest.setProductId(product.getId());
+            stockAdjustmentRequest.setQuantity(itemRequest.getQuantity().negate()); // Negative for sales
+            stockAdjustmentRequest.setMovementType(MovementType.SALE);
+            stockAdjustmentRequest.setReason("Sale " + savedSale.getId()); // Optional reason
+            inventoryService.adjustStock(stockAdjustmentRequest);
 
             SaleItem saleItem = new SaleItem();
             saleItem.setProduct(product);
@@ -109,15 +116,5 @@ public class SaleService {
         }
 
         return savedSale;
-    }
-
-
-    private Optional<User> getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            return Optional.empty();
-        }
-        String username = authentication.getName();
-        return userRepository.findByUsername(username);
     }
 }

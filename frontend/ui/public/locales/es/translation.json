@@ -28,7 +28,7 @@
     "enterBarcode": "Introducir código de barras",
     "searchProduct": "Buscar producto",
     "searchCustomer": "Buscar cliente",
-    "lastSales": "Últimas ventas",
+    "reports": "Reportes",
     "suppliers": "Proveedores",
     "users": "Usuarios",
     "products": "Productos",
@@ -134,7 +134,16 @@
     "unitOfMeasureLabel": "Unidad de Medida",
     "unitOfMeasureHeader": "Unidad",
     "closeButton": "Cerrar",
-    "saveChangesButton": "Guardar Cambios"
+    "saveChangesButton": "Guardar Cambios",
+    "units": {
+      "kg": "kg",
+      "liter": "lt",
+      "unit": "unidad"
+    },
+    "lowStock": "Stock Bajo",
+    "productInfo": "Información del Producto",
+    "inventoryInfo": "Información de Inventario",
+    "initialStock": "Stock Inicial"
   },
   "customer": {
     "newCustomer": "Nuevo Cliente",
@@ -160,5 +169,45 @@
     "serverError": "Error interno del servidor. Por favor, intente más tarde.",
     "networkError": "Error de red. No se pudo conectar con el servidor.",
     "generic": "Error: {{status}}"
+  },
+  "cashRegister": {
+    "loading": "Cargando...",
+    "close": "Cerrar Caja",
+    "open": "Abrir Caja",
+    "openTitle": "Abrir Caja",
+    "openingBalance": "Saldo Inicial",
+    "closeTitle": "Cerrar Caja",
+    "closingBalance": "Saldo de Cierre",
+    "closedMessage": "La caja está cerrada. Por favor, ábrala para comenzar a vender.",
+    "totalSales": "Ventas Totales",
+    "totalCash": "Efectivo Total",
+    "totalCard": "Tarjeta Total"
+  },
+  "buttons": {
+    "cancel": "Cancelar"
+  },
+  "inventory": {
+    "adjustStockTitle": "Ajustar Inventario",
+    "quantity": "Cantidad",
+    "quantityPlaceholder": "Ej: 10 o -5",
+    "movementType": "Tipo de Movimiento",
+"adjustButton": "Ajustar",
+    "historyTitle": "Historial de Inventario",
+    "loadingHistory": "Cargando historial...",
+    "history": {
+      "date": "Fecha",
+      "user": "Usuario",
+      "type": "Tipo",
+      "quantity": "Cantidad",
+      "reason": "Razón"
+    },
+    "types": {
+      "restock": "Recarga de Stock",
+      "manualAdjustment": "Ajuste Manual",
+      "loss": "Pérdida/Daño",
+      "initial": "Stock Inicial",
+      "sale": "Venta",
+      "return": "Devolución"
+    }
   }
 }

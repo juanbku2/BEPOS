@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Form, Table, Button, InputGroup } from 'react-bootstrap';
-import axios from '../api/axios';
+import instance from '../api/axios'; // Import the configured axios instance
 import { Product } from '../types/Product';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
@@ -15,7 +15,7 @@ const ProductSearch = ({ onAddProduct }: ProductSearchProps) => {
 
   useEffect(() => {
     // Fetch all products on component mount
-    axios.get('/api/v1/products')
+    instance.get('/products') // Use instance and remove /api/v1
       .then(response => {
         setProducts(response.data);
       })
@@ -30,8 +30,8 @@ const ProductSearch = ({ onAddProduct }: ProductSearchProps) => {
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const endpoint = searchTerm ? `/api/v1/products?name=${searchTerm}` : '/api/v1/products';
-    axios.get(endpoint)
+    const endpoint = searchTerm ? `/products?name=${searchTerm}` : '/products'; // Remove /api/v1
+    instance.get(endpoint) // Use instance
       .then(response => {
         setProducts(response.data);
       })

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form } from 'react-bootstrap';
-import axios from '../api/axios';
+import instance from '../api/axios'; // Import the configured axios instance
 import { Customer } from '../types/Customer';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
@@ -15,7 +15,7 @@ const CustomerComponent = () => {
   }, []);
 
   const fetchCustomers = () => {
-    axios.get('/api/v1/customers')
+    instance.get('/customers') // Use instance and remove /api/v1
       .then(response => {
         setCustomers(response.data);
       })
@@ -30,14 +30,14 @@ const CustomerComponent = () => {
 
   const handleSave = () => {
     const method = form.id ? 'put' : 'post';
-    const url = form.id ? `/api/v1/customers/${form.id}` : '/api/v1/customers';
+    const url = form.id ? `/customers/${form.id}` : '/customers'; // Remove /api/v1
 
     const customerData = {
       ...form,
       currentDebt: Number(form.currentDebt) || 0,
     };
 
-    axios[method](url, customerData)
+    instance[method](url, customerData) // Use instance
       .then(() => {
         fetchCustomers();
         setShowModal(false);
@@ -53,7 +53,7 @@ const CustomerComponent = () => {
   };
 
   const handleDelete = (id: number) => {
-    axios.delete(`/api/v1/customers/${id}`)
+    instance.delete(`/customers/${id}`) // Use instance and remove /api/v1
       .then(() => {
         fetchCustomers();
       })

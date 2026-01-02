@@ -29,7 +29,7 @@ public class CashRegisterServiceImpl implements CashRegisterService {
 
     @Override
     @Transactional
-    public CashRegisterClosure openRegister(BigDecimal initialCash) {
+    public CashRegisterClosure openRegister(BigDecimal openingAmount) {
         cashRegisterClosureRepository.findByStatus(CashRegisterStatus.OPEN).ifPresent(c -> {
             throw new IllegalStateException("There is already an open cash register.");
         });
@@ -39,24 +39,24 @@ public class CashRegisterServiceImpl implements CashRegisterService {
         CashRegisterClosure cashRegister = new CashRegisterClosure();
         cashRegister.setOpenedAt(LocalDateTime.now());
         cashRegister.setOpenedBy(user);
-        cashRegister.setInitialCash(initialCash);
+        cashRegister.setInitialCash(openingAmount);
         cashRegister.setStatus(CashRegisterStatus.OPEN);
 
-        log.info("Opening cash register for user {} with initial cash {}", user.getUsername(), initialCash);
+        log.info("Opening cash register for user {} with initial cash {}", user.getUsername(), openingAmount);
         return cashRegisterClosureRepository.save(cashRegister);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CashRegisterClosure getOpenRegister() {
-        return cashRegisterClosureRepository.findByStatus(CashRegisterStatus.OPEN)
-                .orElseThrow(() -> new IllegalStateException("No open cash register found."));
+    public Optional<CashRegisterClosure> getCurrentCashRegister() {
+        return cashRegisterClosureRepository.findByStatus(CashRegisterStatus.OPEN);
     }
 
     @Override
     @Transactional
     public CashRegisterClosure closeRegister(BigDecimal countedCash) {
-        CashRegisterClosure cashRegister = getOpenRegister();
+        CashRegisterClosure cashRegister = getCurrentCashRegister()
+                .orElseThrow(() -> new IllegalStateException("No open cash register found."));
         if (cashRegister.getStatus() == CashRegisterStatus.CLOSED) {
             throw new IllegalStateException("Cash register is already closed.");
         }
@@ -70,6 +70,9 @@ public class CashRegisterServiceImpl implements CashRegisterService {
         BigDecimal totalCard = sales.stream().filter(s -> "Card".equalsIgnoreCase(s.getPaymentMethod())).map(Sale::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalCredit = sales.stream().filter(s -> "Credit".equalsIgnoreCase(s.getPaymentMethod())).map(Sale::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // This part related to CashMovement is not directly requested in the current prompt,
+        // but keeping it as it was in the original file.
+        // If cash movements are part of the closure calculation, this should be maintained.
         List<CashMovement> cashMovements = cashMovementRepository.findByCashRegisterId(cashRegister.getId());
         BigDecimal totalCashMovements = cashMovements.stream()
                 .map(movement -> movement.getMovementType() == CashMovementType.IN ? movement.getAmount() : movement.getAmount().negate())

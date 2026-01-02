@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form } from 'react-bootstrap';
-import axios from '../api/axios';
+import instance from '../api/axios'; // Import the configured axios instance
 import { User } from '../types/User';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
@@ -17,7 +17,7 @@ const UserComponent = () => {
   }, []);
 
   const fetchUsers = () => {
-    axios.get('/api/v1/users')
+    instance.get('/users') // Use instance and remove /api/v1
       .then(response => {
         setUsers(response.data);
       })
@@ -36,9 +36,9 @@ const UserComponent = () => {
 
   const handleSave = () => {
     const method = form.id ? 'put' : 'post';
-    const url = form.id ? `/api/v1/users/${form.id}` : '/api/v1/users';
+    const url = form.id ? `/users/${form.id}` : '/users'; // Remove /api/v1
 
-    axios[method](url, form)
+    instance[method](url, form) // Use instance
       .then(() => {
         fetchUsers();
         setShowModal(false);
@@ -54,7 +54,7 @@ const UserComponent = () => {
   };
 
   const handleDelete = (id: number) => {
-    axios.delete(`/api/v1/users/${id}`)
+    instance.delete(`/users/${id}`) // Use instance and remove /api/v1
       .then(() => {
         fetchUsers();
       })
@@ -69,7 +69,7 @@ const UserComponent = () => {
   };
   
   const handleChangePassword = () => {
-    axios.put(`/api/v1/users/${form.id}/password`, { newPassword: newPassword })
+    instance.put(`/users/${form.id}/password`, { newPassword: newPassword }) // Use instance and remove /api/v1
       .then(() => {
         setShowChangePasswordModal(false);
         setNewPassword('');

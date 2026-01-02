@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Card, Form, InputGroup } from 'react-bootstrap';
-import axios from '../api/axios';
+import instance from '../api/axios'; // Import the configured axios instance
 import { Customer } from '../types/Customer';
 import { useTranslation } from 'react-i18next';
 
@@ -24,7 +24,7 @@ const Checkout = ({ items, customer, total, onSaleComplete }: CheckoutProps) => 
       paymentMethod: paymentMethod
     };
 
-    axios.post('/api/v1/sales', sale)
+    instance.post('/sales', sale) // Use instance and remove /api/v1
       .then(() => {
         onSaleComplete();
       })
