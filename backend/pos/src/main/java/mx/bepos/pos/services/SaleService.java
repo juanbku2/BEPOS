@@ -1,6 +1,7 @@
 package mx.bepos.pos.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import mx.bepos.pos.domain.*;
 import mx.bepos.pos.domain.repositories.*;
 import mx.bepos.pos.web.dto.SaleRequest;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SaleService {
 
     private final SaleRepository saleRepository;
@@ -27,12 +29,14 @@ public class SaleService {
 
     @Transactional(readOnly = true)
     public List<Sale> getLastSales(int limit) {
+        log.info("Fetching last {} sales", limit);
         Pageable pageable = PageRequest.of(0, limit, Sort.by("saleDate").descending());
         return saleRepository.findAll(pageable).getContent();
     }
 
     @Transactional
     public Sale createSale(SaleRequest saleRequest) {
+        log.info("Creating sale: {}", saleRequest);
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         Sale sale = new Sale();
@@ -41,7 +45,10 @@ public class SaleService {
 
         if (saleRequest.getCustomerId() != null) {
             Customer customer = customerRepository.findById(saleRequest.getCustomerId())
-                    .orElseThrow(() -> new RuntimeException("Customer not found"));
+                    .orElseThrow(() -> {
+                        log.error("Customer not found with id: {}", saleRequest.getCustomerId());
+                        return new RuntimeException("Customer not found");
+                    });
             sale.setCustomer(customer);
         }
 
@@ -50,9 +57,13 @@ public class SaleService {
 
         for (var itemRequest : saleRequest.getItems()) {
             Product product = productRepository.findById(itemRequest.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+                    .orElseThrow(() -> {
+                        log.error("Product not found with id: {}", itemRequest.getProductId());
+                        return new RuntimeException("Product not found");
+                    });
 
             if (product.getStockQuantity().compareTo(itemRequest.getQuantity()) < 0) {
+                log.error("Not enough stock for product: {}. Requested: {}, Available: {}", product.getName(), itemRequest.getQuantity(), product.getStockQuantity());
                 throw new RuntimeException("Not enough stock for product: " + product.getName());
             }
 
@@ -73,11 +84,13 @@ public class SaleService {
         sale.setTotalAmount(totalAmount);
         Sale savedSale = saleRepository.save(sale);
         saleItemRepository.saveAll(saleItems);
+        log.info("Sale created successfully with id: {}", savedSale.getId());
 
         if ("Credit".equalsIgnoreCase(sale.getPaymentMethod()) && sale.getCustomer() != null) {
             Customer customer = sale.getCustomer();
             customer.setCurrentDebt(customer.getCurrentDebt().add(totalAmount));
             customerRepository.save(customer);
+            log.info("Customer debt updated for customer: {}", customer.getId());
 
             CreditHistory creditHistory = new CreditHistory();
             creditHistory.setCustomer(customer);
@@ -85,6 +98,7 @@ public class SaleService {
             creditHistory.setAmount(totalAmount);
             creditHistory.setTransactionType("DEBT");
             creditHistoryRepository.save(creditHistory);
+            log.info("Credit history created for customer: {}", customer.getId());
         }
 
         return savedSale;
