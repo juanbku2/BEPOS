@@ -184,7 +184,8 @@
     "totalCard": "Tarjeta Total"
   },
   "buttons": {
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "close": "Cerrar"
   },
   "inventory": {
     "adjustStockTitle": "Ajustar Inventario",
