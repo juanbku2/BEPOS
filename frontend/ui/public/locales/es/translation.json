@@ -3,7 +3,10 @@
     "username": "Nombre de usuario",
     "password": "Contraseña",
     "loginButton": "Iniciar sesión",
-    "invalidCredentials": "Nombre de usuario o contraseña inválidos"
+    "invalidCredentials": "Nombre de usuario o contraseña inválidos",
+    "enterUsername": "Introduce tu usuario",
+    "enterPassword": "Introduce tu contraseña",
+    "success": "¡Inicio de sesión exitoso!"
   },
   "productSearch": {
     "searchPlaceholder": "Buscar productos por nombre",
@@ -20,7 +23,13 @@
     "administration": "Administración",
     "theme": "Tema",
     "classic": "Clásico",
-    "fresh": "Fresco"
+    "fresh": "Fresco",
+    "optional": "Opcional",
+    "generating": "Generando...",
+    "invoice": "Facturar",
+    "backToModules": "Volver a Módulos",
+    "logout": "Cerrar sesión",
+    "module": "Módulo"
   },
   "dashboard": {
     "posScreen": "Pantalla POS",
@@ -192,7 +201,7 @@
     "quantity": "Cantidad",
     "quantityPlaceholder": "Ej: 10 o -5",
     "movementType": "Tipo de Movimiento",
-"adjustButton": "Ajustar",
+    "adjustButton": "Ajustar",
     "historyTitle": "Historial de Inventario",
     "loadingHistory": "Cargando historial...",
     "history": {
@@ -210,5 +219,33 @@
       "sale": "Venta",
       "return": "Devolución"
     }
+  },
+  "moduleSelector": {
+    "title": "Selecciona un módulo",
+    "posSubtitle": "Punto de Venta",
+    "invoiceSubtitle": "Facturación"
+  },
+  "invoice": {
+    "generateInvoice": "Generar Factura",
+    "forSale": "Para la Venta",
+    "rfc": "RFC",
+    "razonSocial": "Razón Social",
+    "usoCfdi": "Uso CFDI",
+    "codigoPostal": "Código Postal",
+    "email": "Email",
+    "generateButton": "Generar factura",
+    "generatedSuccessfully": "Factura generada correctamente",
+    "generateError": "Error al generar la factura",
+    "dashboard": "Dashboard",
+    "createManual": "Crear Factura Manual",
+    "viewXmlPdf": "Ver XML/PDF",
+    "cancelInvoices": "Cancelar Facturas",
+    "satStatus": "Estado SAT",
+    "title": "Módulo de Facturación",
+    "totalInvoices": "Total Facturas",
+    "pendingInvoices": "Facturas Pendientes",
+    "totalAmount": "Monto Total",
+    "invoiceList": "Lista de Facturas",
+    "tableContentPlaceholder": "Contenido de la tabla de facturas aquí..."
   }
 }

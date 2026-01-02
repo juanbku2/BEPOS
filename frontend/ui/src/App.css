@@ -1,3 +1,9 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
 :root {
     --primary-color: #198754; /* Bootstrap Green */
     --secondary-color: #6c757d; /* Bootstrap Secondary */
@@ -8,6 +14,12 @@
     --text-color: #212529;
     --border-color: #dee2e6;
     --card-border-radius: 0.5rem;
+
+    /* BM Systems Colors */
+    --bm-blue: #0B3C5D;
+    --bm-green: #2EAD5B;
+    --bm-orange: #F57C00;
+    --bm-text-gray: #6B7280;
 }
 
 body {
@@ -15,15 +27,16 @@ body {
     color: var(--text-color);
 }
 
-.dashboard-layout {
-    display: flex;
-    height: 100vh;
+.app-layout {
+  display: flex;
+  height: calc(100vh - 88px); /* 88px is the height of the topbar */
 }
 
-.content-container {
-    flex-grow: 1;
-    padding: 2rem;
-    overflow-y: auto;
+.content {
+  flex: 1;
+  background: #f8f9fa; /* Consistent light background */
+  padding: 2rem; /* Retain existing padding for content area */
+  overflow-y: auto; /* Allow scrolling within the content */
 }
 
 /* --- Theme: Classic POS --- */
@@ -117,3 +130,4 @@ input[type=number] {
     .checkout-col .total-display { font-size: 1.75rem; margin-bottom: 0; }
     .checkout-col .btn-success { font-size: 1.1rem; padding: 0.5rem 1rem; min-height: 0; }
 }
+

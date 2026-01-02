@@ -3,7 +3,10 @@
     "username": "Username",
     "password": "Password",
     "loginButton": "Login",
-    "invalidCredentials": "Invalid username or password"
+    "invalidCredentials": "Invalid username or password",
+    "enterUsername": "Enter your username",
+    "enterPassword": "Enter your password",
+    "success": "Login successful!"
   },
   "productSearch": {
     "searchPlaceholder": "Search for products by name",
@@ -20,7 +23,13 @@
     "administration": "Administration",
     "theme": "Theme",
     "classic": "Classic",
-    "fresh": "Fresh"
+    "fresh": "Fresh",
+    "optional": "Optional",
+    "generating": "Generating...",
+    "invoice": "Invoice",
+    "backToModules": "Back to Modules",
+    "logout": "Logout",
+    "module": "Module"
   },
   "dashboard": {
     "posScreen": "POS Screen",
@@ -184,14 +193,15 @@
     "totalCard": "Total Card"
   },
   "buttons": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "close": "Close"
   },
   "inventory": {
     "adjustStockTitle": "Adjust Stock",
     "quantity": "Quantity",
     "quantityPlaceholder": "e.g., 10 or -5",
     "movementType": "Movement Type",
-"adjustButton": "Adjust",
+    "adjustButton": "Adjust",
     "historyTitle": "Inventory History",
     "loadingHistory": "Loading history...",
     "history": {
@@ -209,5 +219,33 @@
       "sale": "Sale",
       "return": "Return"
     }
+  },
+  "moduleSelector": {
+    "title": "Select a Module",
+    "posSubtitle": "Point of Sale",
+    "invoiceSubtitle": "Invoicing"
+  },
+  "invoice": {
+    "generateInvoice": "Generate Invoice",
+    "forSale": "For Sale",
+    "rfc": "RFC",
+    "razonSocial": "Business Name",
+    "usoCfdi": "CFDI Use",
+    "codigoPostal": "Postal Code",
+    "email": "Email",
+    "generateButton": "Generate Invoice",
+    "generatedSuccessfully": "Invoice generated successfully",
+    "generateError": "Error generating invoice",
+    "dashboard": "Dashboard",
+    "createManual": "Create Manual Invoice",
+    "viewXmlPdf": "View XML/PDF",
+    "cancelInvoices": "Cancel Invoices",
+    "satStatus": "SAT Status",
+    "title": "Invoicing Module",
+    "totalInvoices": "Total Invoices",
+    "pendingInvoices": "Pending Invoices",
+    "totalAmount": "Total Amount",
+    "invoiceList": "Invoice List",
+    "tableContentPlaceholder": "Invoice table content here..."
   }
 }

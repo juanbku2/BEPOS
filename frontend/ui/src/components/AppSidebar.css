@@ -1,0 +1,60 @@
+.app-sidebar {
+    width: 250px; /* Wider sidebar */
+    /* background-color will be set by prop */
+    color: white;
+    flex-shrink: 0;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Changed from 100vh */
+}
+
+.app-sidebar-header {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-sidebar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.75);
+    border-radius: 0.3rem;
+    margin-bottom: 0.5rem;
+    padding: 0.75rem 1rem;
+    display: flex; /* Allow icon and text */
+    align-items: center;
+}
+
+.app-sidebar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.app-sidebar-nav .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2); /* More subtle active state */
+    color: white;
+    font-weight: bold;
+}
+
+.app-sidebar-footer {
+    margin-top: auto; /* Pushes footer to the bottom */
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Styles for dropdown and buttons within the footer if needed */
+.app-sidebar-footer .dropdown .btn, .app-sidebar-footer .btn {
+    font-size: 1rem; /* Smaller font for footer buttons */
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

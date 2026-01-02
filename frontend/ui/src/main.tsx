@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './index.css'
+import './index.css';
+import './App.css'; // Moved from App.tsx to ensure global variables are loaded early
 import App from './App.tsx'
 import { BrowserRouter } from 'react-router-dom';
 import i18n from './i18n'; // Import your i18n configuration

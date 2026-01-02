@@ -62,6 +62,7 @@ instance.interceptors.response.use(
 );
 
 import { CashRegister, OpenRegisterRequest, CloseRegisterRequest, CloseCashRegisterResponse, CurrentCashRegisterResponse } from '../types/CashRegister';
+import { InvoiceRequest, InvoiceResponse } from '../types/Invoice'; // Import new Invoice types
 
 export const getCurrentCashRegister = async (): Promise<CurrentCashRegisterResponse> => {
     const response = await instance.get<CurrentCashRegisterResponse>('/cash-register/current');
@@ -78,9 +79,15 @@ export const closeCashRegister = async (request: CloseRegisterRequest): Promise<
     return response.data;
 };
 
+export const generateInvoice = async (request: InvoiceRequest): Promise<InvoiceResponse> => {
+  const response = await instance.post<InvoiceResponse>('/invoices/generate', request);
+  return response.data;
+};
+
 export default instance;
 
 import { InventoryMovement, StockAdjustmentRequest, InventoryHistoryResponse } from '../types/Inventory';
+import { User } from '../types/User'; // Import User type
 
 export const adjustStock = async (request: StockAdjustmentRequest): Promise<void> => {
     await instance.post('/inventory/adjust', request);
@@ -89,5 +96,10 @@ export const adjustStock = async (request: StockAdjustmentRequest): Promise<void
 export const getInventoryHistory = async (productId: number): Promise<InventoryHistoryResponse[]> => {
     const response = await instance.get<InventoryHistoryResponse[]>(`/inventory/history?productId=${productId}`);
     return response.data;
+};
+
+export const getUserProfile = async (): Promise<User> => {
+  const response = await instance.get<User>('/users/me');
+  return response.data;
 };
 

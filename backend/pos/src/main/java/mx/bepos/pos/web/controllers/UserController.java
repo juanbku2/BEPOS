@@ -72,4 +72,11 @@ public class UserController {
         userService.adminChangePassword(userId, request);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<User> getCurrentUserProfile() {
+        return userService.getCurrentUser()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

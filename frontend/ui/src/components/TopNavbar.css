@@ -1,0 +1,89 @@
+.top-navbar {
+    height: 88px;
+
+    padding: 0 32px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    color: white; /* All text white */
+    border-bottom: 6px solid white; /* Added separation line */
+}
+
+/* Remove default Navbar.Brand styling */
+.top-navbar .navbar-brand {
+    padding: 0;
+    margin-right: 0;
+}
+
+.top-navbar .app-name-text {
+    font-size: 24px; /* Between 22-24px */
+    font-weight: 700; /* Bold */
+    color: white;
+}
+
+.top-navbar .module-name-text {
+    font-size: 16px; /* Between 15-16px */
+    font-weight: 500; /* Medium */
+    color: white;
+}
+
+.top-navbar .user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Reduced gap for a more compact look */
+    color: white; /* Ensure user info text is white */
+}
+
+.top-navbar .user-role-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+}
+
+.top-navbar .dropdown-toggle {
+    background-color: transparent;
+    border: none;
+    color: white; /* Ensure dropdown toggle text is white */
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.top-navbar .dropdown-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle hover effect */
+}
+
+.top-navbar .dropdown-menu {
+    border-radius: 0.25rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.top-navbar .dropdown-item.active,
+.top-navbar .dropdown-item:active {
+  background-color: var(--primary-color); /* Keep existing active color logic for dropdown items */
+  color: white;
+}
+
+/* Ensure dropdown toggle doesn't look like a button */
+.top-navbar .user-name-dropdown-toggle.btn {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: white !important;
+}
+.top-navbar .user-name-dropdown-toggle.btn:hover,
+.top-navbar .user-name-dropdown-toggle.btn:focus {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+.top-navbar .dropdown-menu .dropdown-item {
+    color: var(--text-color); /* Dropdown items should use default text color */
+}
+
+.top-navbar .dropdown-menu .dropdown-item-text {
+    color: var(--bm-text-gray); /* Match requirement for muted text */
+}

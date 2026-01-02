@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Table } from 'react-bootstrap';
+import { Table, Button } from 'react-bootstrap';
 import instance from '../api/axios'; // Import the configured axios instance
 import { Sale } from '../types/Sale';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import './LastSales.css'; // Import custom CSS for the button
 
-const LastSales = () => {
+interface LastSalesProps {
+  onInvoiceSale?: (sale: Sale) => void; // Optional prop to pass the sale to a parent handler
+}
+
+const LastSales = ({ onInvoiceSale }: LastSalesProps) => {
   const { t } = useTranslation(); // Initialize useTranslation
   const [sales, setSales] = useState<Sale[]>([]);
 
@@ -18,9 +23,18 @@ const LastSales = () => {
       });
   }, []);
 
+  const handleInvoiceClick = (sale: Sale) => {
+    if (onInvoiceSale) {
+      onInvoiceSale(sale);
+    } else {
+      console.log('Facturar sale ID:', sale.id);
+      // Placeholder for opening invoice modal
+    }
+  };
+
   return (
     <div>
-      <h2>{t('lastSales.title')}</h2> {/* Translate title */}
+
       <Table striped bordered hover>
         <thead>
           <tr>
@@ -29,6 +43,7 @@ const LastSales = () => {
             <th>{t('lastSales.userHeader')}</th> {/* Translate User */}
             <th>{t('lastSales.totalHeader')}</th> {/* Translate Total */}
             <th>{t('lastSales.dateHeader')}</th> {/* Translate Date */}
+            <th></th> {/* New column for the button */}
           </tr>
         </thead>
         <tbody>
@@ -39,6 +54,15 @@ const LastSales = () => {
               <td>{sale.user?.username}</td>
               <td>${sale.totalAmount.toFixed(2)}</td>
               <td>{new Date(sale.saleDate).toLocaleString()}</td>
+              <td>
+                <Button
+                  className="bm-invoice-button"
+                  size="sm"
+                  onClick={() => handleInvoiceClick(sale)}
+                >
+                  {t('common.invoice')}
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>

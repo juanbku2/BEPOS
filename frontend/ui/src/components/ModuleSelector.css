@@ -1,0 +1,33 @@
+.module-selector-card {
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  cursor: pointer;
+  border: none;
+  border-radius: 0.5rem; /* Rounded corners */
+}
+
+.module-selector-card:hover {
+  transform: translateY(-5px);
+}
+
+.pos-card {
+  background-color: var(--bm-green) !important; /* Changed from BM Blue to BM Green */
+  color: white !important;
+}
+
+.pos-card:hover {
+  background-color: var(--bm-orange) !important; /* Both now hover to BM Orange */
+}
+
+.invoice-card {
+  background-color: var(--bm-blue) !important; /* Changed from BM Green to BM Blue */
+  color: white !important;
+}
+
+.invoice-card:hover {
+  background-color: var(--bm-orange) !important; /* Both now hover to BM Orange */
+}
+
+.module-selector-title {
+  color: var(--bm-blue);
+  margin-bottom: 2rem;
+}

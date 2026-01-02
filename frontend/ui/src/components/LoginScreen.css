@@ -1,0 +1,15 @@
+.bm-login-button {
+  background-color: var(--bm-blue) !important;
+  border-color: var(--bm-blue) !important;
+  color: white !important;
+  border-radius: 0.25rem; /* For rounded corners */
+}
+
+.bm-login-button:hover {
+  background-color: var(--bm-green) !important;
+  border-color: var(--bm-green) !important;
+}
+
+.bm-login-text-gray {
+  color: var(--bm-text-gray) !important;
+}

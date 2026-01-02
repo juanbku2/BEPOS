@@ -1,11 +1,12 @@
 import { useCashRegister } from '../context/CashRegisterContext';
-import { Alert } from 'react-bootstrap';
+import { Alert, Dropdown } from 'react-bootstrap'; // Import Dropdown for theme switcher in footer
 import { useState } from 'react';
 import { Container, Row, Col, Form, Table, Button, Modal, Card, InputGroup } from 'react-bootstrap';
 import instance from '../api/axios'; // Import the configured axios instance
 
 // Import Components
-import Sidebar from './Sidebar';
+import AppSidebar from './AppSidebar';
+import TopNavbar from './TopNavbar'; // Import the new TopNavbar
 import ProductSearch from './ProductSearch';
 import CustomerSearch from './CustomerSearch';
 import Checkout from './Checkout';
@@ -14,11 +15,14 @@ import SupplierComponent from './Supplier';
 import UserComponent from './User';
 import ProductComponent from './Product';
 import CustomerComponent from './Customer';
+import InvoiceModal from './InvoiceModal';
+import { CashRegisterControl } from './CashRegisterControl';
 
 // Import Types
 import { Product } from '../types/Product';
 import { Customer } from '../types/Customer';
 import { SaleItem } from '../types/SaleItem';
+import { Sale } from '../types/Sale'; // Import Sale type
 
 // Import Styling & Translation
 import { useTranslation } from 'react-i18next';
@@ -37,6 +41,7 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     const isCashRegisterClosed = cashRegisterStatus === 'CLOSED';
     const [currentView, setCurrentView] = useState('pos');
 
+
     // POS-specific states
     const [barcode, setBarcode] = useState('');
     const [items, setItems] = useState<SaleItem<Product>[]>([]);
@@ -48,9 +53,48 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     const [showCustomerSearch, setShowCustomerSearch] = useState(false);
     const [showCheckout, setShowCheckout] = useState(false);
     const [checkoutTotal, setCheckoutTotal] = useState(0);
+
+    // Invoice Modal states
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+    const [selectedSaleToInvoice, setSelectedSaleToInvoice] = useState<Sale | null>(null);
     
     // Key for re-rendering sales component
     const [lastSalesKey, setLastSalesKey] = useState(0);
+
+    // --- Sidebar Nav Items for POS ---
+    const posNavItems = [
+        { key: 'pos', icon: '🛒', label: t('dashboard.posScreen'), onClick: () => setCurrentView('pos'), active: currentView === 'pos' },
+        { key: 'products', icon: '📦', label: t('dashboard.products'), onClick: () => setCurrentView('products'), active: currentView === 'products' },
+        { key: 'customers', icon: '👥', label: t('dashboard.customers'), onClick: () => setCurrentView('customers'), active: currentView === 'customers' },
+        { key: 'reports', icon: '📈', label: t('dashboard.reports'), onClick: () => setCurrentView('sales'), active: currentView === 'sales' }, // Using 'sales' for reports
+        { key: 'suppliers', icon: '🚚', label: t('dashboard.suppliers'), onClick: () => setCurrentView('suppliers'), active: currentView === 'suppliers' },
+        { key: 'users', icon: '👨‍💼', label: t('dashboard.users'), onClick: () => setCurrentView('users'), active: currentView === 'users' },
+    ];
+
+    // --- POS Sidebar Footer Content ---
+    const posFooterContent = (
+      <>
+        <CashRegisterControl />
+      </>
+    );
+
+
+    // --- Invoice Modal Handlers ---
+    const handleShowInvoiceModal = (sale: Sale) => {
+      setSelectedSaleToInvoice(sale);
+      setShowInvoiceModal(true);
+    };
+
+    const handleHideInvoiceModal = () => {
+      setShowInvoiceModal(false);
+      setSelectedSaleToInvoice(null);
+    };
+
+    const handleInvoiceSuccess = () => {
+      // Logic to run after successful invoice generation (e.g., refresh sales list)
+      console.log('Invoice generated successfully! Refreshing sales list...');
+      setLastSalesKey(prevKey => prevKey + 1); // Trigger re-render of LastSales
+    };
 
     // --- Data Handling Functions ---
     const handleBarcodeSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -167,6 +211,8 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     
     const renderPosView = () => (
         <>
+
+
             {isCashRegisterClosed && (
                 <Alert variant="warning">
                     {t('cashRegister.closedMessage')}
@@ -235,32 +281,45 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
 
     const renderCurrentView = () => {
         switch (currentView) {
-            case 'pos':       return renderPosView();
-            case 'products':  return <ProductComponent />;
+            case 'pos': return renderPosView();
+            case 'products': return <ProductComponent />;
             case 'customers': return <CustomerComponent />;
             case 'suppliers': return <SupplierComponent />;
-            case 'sales':     return <LastSales key={lastSalesKey} />;
-            case 'users':     return <UserComponent />;
-            default:          return renderPosView();
+            case 'sales': return <LastSales key={lastSalesKey} onInvoiceSale={handleShowInvoiceModal} />;
+            case 'users': return <UserComponent />;
+            default: return renderPosView();
         }
     };
 
     return (
-        <div className="dashboard-layout">
-            <Sidebar onSelect={setCurrentView} onLogout={onLogout} setTheme={setTheme} theme={theme} currentView={currentView} />
-            <div className="content-container">
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h1 className="h2">{t('dashboard.posScreen')}</h1>
-                    <Button variant="outline-secondary" onClick={onLogout}>{t('dashboard.logout')}</Button>
-                </div>
+        <>
+            <AppSidebar
+                title=""
+                bgColor="var(--bm-green)"
+                navItems={posNavItems}
+                onLogout={onLogout}
+                theme={theme}
+                setTheme={setTheme}
+                footerContent={posFooterContent}
+            />
+            <div className="content"> {/* Changed from content-container */}
                 {renderCurrentView()}
             </div>
+
             
             {/* Modals for POS view */}
             <Modal show={showProductSearch} onHide={() => setShowProductSearch(false)} size="lg"><Modal.Header closeButton><Modal.Title>{t('dashboard.searchProduct')}</Modal.Title></Modal.Header><Modal.Body><ProductSearch onAddProduct={(p) => { addProductToCart(p, p.unitOfMeasure === 'UNIT' ? 1 : 0.5); setShowProductSearch(false); }} /></Modal.Body></Modal>
             <Modal show={showCustomerSearch} onHide={() => setShowCustomerSearch(false)} size="lg"><Modal.Header closeButton><Modal.Title>{t('dashboard.searchCustomer')}</Modal.Title></Modal.Header><Modal.Body><CustomerSearch onSelectCustomer={(c) => { setSelectedCustomer(c); setShowCustomerSearch(false); }} /></Modal.Body></Modal>
             <Modal show={showCheckout} onHide={() => setShowCheckout(false)}><Modal.Header closeButton><Modal.Title>{t('dashboard.checkout')}</Modal.Title></Modal.Header><Modal.Body><Checkout items={items.map(it => ({ productId: it.product.id, quantity: it.quantity, price: it.product.salePrice }))} customer={selectedCustomer} total={checkoutTotal} onSaleComplete={handleSaleComplete} /></Modal.Body></Modal>
-        </div>
+
+            {/* Invoice Modal */}
+            <InvoiceModal
+              show={showInvoiceModal}
+              onHide={handleHideInvoiceModal}
+              sale={selectedSaleToInvoice}
+              onInvoiceSuccess={handleInvoiceSuccess}
+            />
+        </>
     );
 };
 
