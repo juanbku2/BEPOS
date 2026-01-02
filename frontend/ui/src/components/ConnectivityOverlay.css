@@ -1,0 +1,43 @@
+.connectivity-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8); /* Dark, semi-transparent background */
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* Ensure it's on top of everything */
+  text-align: center;
+  flex-direction: column;
+  pointer-events: all; /* Block all user interactions */
+}
+
+.connectivity-content {
+  padding: 2rem;
+  border-radius: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.9); /* Slightly darker content box */
+}
+
+.connectivity-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.connectivity-content p {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.connectivity-content ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.connectivity-content ul li {
+  margin-bottom: 0.3rem;
+}

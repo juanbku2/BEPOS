@@ -173,11 +173,21 @@
     "unexpected": "Ha ocurrido un error inesperado.",
     "badRequest": "Petición incorrecta.",
     "unauthorized": "No autorizado. Por favor, inicie sesión de nuevo.",
+    "unauthorizedSessionExpired": "Su sesión ha expirado. Por favor, inicie sesión de nuevo.",
     "forbidden": "No tiene permiso para realizar esta acción.",
+    "forbiddenTitle": "Permiso Denegado",
+    "forbiddenMessage": "No tiene permiso para realizar esta acción.",
     "notFound": "El recurso solicitado no fue encontrado.",
-    "serverError": "Error interno del servidor. Por favor, intente más tarde.",
+    "serverError": "Error del servidor. Por favor, inténtelo de nuevo.",
     "networkError": "Error de red. No se pudo conectar con el servidor.",
     "generic": "Error: {{status}}"
+  },
+  "connectivity": {
+    "connectionLost": "Conexión Perdida",
+    "cannotConnect": "No se puede conectar al servidor.",
+    "checkNetwork": "Conexión de red",
+    "checkBackend": "Estado del servicio de backend",
+    "reconnecting": "Reconectando..."
   },
   "cashRegister": {
     "loading": "Cargando...",

@@ -4,13 +4,31 @@ import LoginScreen from './components/LoginScreen';
 import ModuleSelector from './components/ModuleSelector';
 import Dashboard from './components/Dashboard';
 import InvoicePage from './components/InvoicePage';
-import TopNavbar from './components/TopNavbar'; // Import TopNavbar
+import TopNavbar from './components/TopNavbar';
 import { useTranslation } from 'react-i18next';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { User } from './types/User';
 
-function App() {
+import { ErrorProvider, useError } from './context/ErrorContext';
+import { setupAxiosInterceptors } from './api/axios';
+import ConnectivityOverlay from './components/ConnectivityOverlay';
+import ForbiddenModal from './components/ForbiddenModal';
+
+// Component to setup interceptors once
+const AxiosInterceptorSetup = () => {
+  const navigate = useNavigate();
+  const { setConnectivityError, setForbiddenModal, setAuthMessage, setLastVisitedRoute } = useError(); // Destructure setLastVisitedRoute
+  const location = useLocation(); // Use useLocation to get current path
+
+  useEffect(() => {
+    setupAxiosInterceptors(setConnectivityError, setForbiddenModal, navigate, setAuthMessage, setLastVisitedRoute, location.pathname);
+  }, [setConnectivityError, setForbiddenModal, navigate, setAuthMessage, setLastVisitedRoute, location.pathname]);
+
+  return null;
+};
+
+function AppContent() {
   const { t } = useTranslation();
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -19,7 +37,8 @@ function App() {
   });
   const [theme, setTheme] = useState(localStorage.getItem('app-theme') || 'theme-fresh');
   const navigate = useNavigate();
-  const location = useLocation(); // Hook to get current path
+  const location = useLocation();
+  const { isConnectivityError, showForbiddenModal, authMessage, setAuthMessage, lastVisitedRoute, setLastVisitedRoute } = useError(); // Get all error context states
 
   const handleSetTheme = (selectedTheme: string) => {
     setTheme(selectedTheme);
@@ -42,11 +61,26 @@ function App() {
     };
   }, [theme]);
 
+  // Handle 401 redirect after login, check for last visited route
+  useEffect(() => {
+    if (token && lastVisitedRoute) {
+      navigate(lastVisitedRoute);
+      setLastVisitedRoute(null); // Clear stored route after navigation
+    } else if (!token && location.pathname !== '/login') {
+      // If token is lost and not on login page, clear any stored route
+      // This prevents redirecting to a protected route after an explicit logout
+      setLastVisitedRoute(null);
+    }
+  }, [token, lastVisitedRoute, navigate, location.pathname, setLastVisitedRoute]);
+
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setToken(null);
     setCurrentUser(null);
+    setLastVisitedRoute(null); // Ensure no old route is kept
+    setAuthMessage(null); // Clear any authentication message on logout
     navigate('/login');
   };
 
@@ -54,25 +88,25 @@ function App() {
     if (location.pathname.startsWith('/pos')) {
       return `BM - ${t('moduleSelector.posSubtitle')}`;
     } else if (location.pathname.startsWith('/invoice')) {
-      return `BM - ${t('moduleSelector.invoiceSubtitle')}`; // Use invoiceSubtitle for a more concise name
+      return `BM - ${t('moduleSelector.invoiceSubtitle')}`;
     }
-    return 'BM POS'; // Default or when not in a specific module
+    return 'BM POS';
   };
 
-  // Determine module name dynamically for TopNavbar
   const getModuleName = () => {
     if (location.pathname.startsWith('/pos')) {
-      return ''; // No additional module name for POS
+      return '';
     } else if (location.pathname.startsWith('/invoice')) {
-      return ''; // No additional module name for Invoice
+      return '';
     } else if (location.pathname === '/select-module') {
       return t('moduleSelector.title');
     }
-    return ''; // Default
+    return '';
   };
 
   return (
     <>
+      <AxiosInterceptorSetup />
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -82,7 +116,9 @@ function App() {
         pauseOnHover={false}
       />
 
-      {/* Render TopNavbar only when authenticated and not on login/select-module screen */}
+      {isConnectivityError && <ConnectivityOverlay />}
+      {showForbiddenModal && <ForbiddenModal isOpen={showForbiddenModal} onClose={() => setForbiddenModal(false)} message={authMessage} />}
+
       {token && (location.pathname.startsWith('/pos') || location.pathname.startsWith('/invoice')) && (
         <TopNavbar
           onLogout={handleLogout}
@@ -95,9 +131,8 @@ function App() {
         />
       )}
 
-      {/* Conditional rendering of app-layout for authenticated module views */}
       {token && (location.pathname.startsWith('/pos') || location.pathname.startsWith('/invoice')) ? (
-        <div className="app-layout"> {/* New wrapper for sidebar and content */}
+        <div className="app-layout">
           <Routes>
             <Route
               path="/pos"
@@ -106,7 +141,6 @@ function App() {
                   onLogout={handleLogout}
                   theme={theme}
                   setTheme={handleSetTheme}
-                  // userRole and userName are now passed to TopNavbar directly from App
                 />
               }
             />
@@ -115,7 +149,6 @@ function App() {
               element={
                 <InvoicePage
                   onLogout={handleLogout}
-                  // userRole and userName are now passed to TopNavbar directly from App
                 />
               }
             />
@@ -123,13 +156,20 @@ function App() {
         </div>
       ) : (
         <Routes>
-          {/* Routes for Login and Module Selection outside the app-layout */}
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/select-module" element={token ? <ModuleSelector /> : <Navigate to="/login" />} />
           <Route path="/" element={token ? <Navigate to="/select-module" /> : <Navigate to="/login" />} />
         </Routes>
       )}
     </>
+  );
+}
+
+function App() {
+  return (
+    <ErrorProvider>
+      <AppContent />
+    </ErrorProvider>
   );
 }
 
