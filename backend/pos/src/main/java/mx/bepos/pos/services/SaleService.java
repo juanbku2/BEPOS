@@ -8,6 +8,7 @@ import mx.bepos.pos.web.dto.SaleRequest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,10 @@ public class SaleService {
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
     private final CreditHistoryRepository creditHistoryRepository;
+    private final InventoryService inventoryService;
+    private final CashRegisterService cashRegisterService;
+    private final UserRepository userRepository;
+
 
     @Transactional(readOnly = true)
     public List<Sale> getLastSales(int limit) {
@@ -37,11 +43,15 @@ public class SaleService {
     @Transactional
     public Sale createSale(SaleRequest saleRequest) {
         log.info("Creating sale: {}", saleRequest);
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        User user = getCurrentUser().orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+
+        CashRegisterClosure openRegister = cashRegisterService.getOpenRegister();
 
         Sale sale = new Sale();
         sale.setPaymentMethod(saleRequest.getPaymentMethod());
         sale.setUser(user);
+        sale.setCashRegister(openRegister);
 
         if (saleRequest.getCustomerId() != null) {
             Customer customer = customerRepository.findById(saleRequest.getCustomerId())
@@ -55,6 +65,9 @@ public class SaleService {
         List<SaleItem> saleItems = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
 
+        // First, save the sale to get an ID
+        Sale savedSale = saleRepository.save(sale);
+
         for (var itemRequest : saleRequest.getItems()) {
             Product product = productRepository.findById(itemRequest.getProductId())
                     .orElseThrow(() -> {
@@ -62,32 +75,26 @@ public class SaleService {
                         return new RuntimeException("Product not found");
                     });
 
-            if (product.getStockQuantity().compareTo(itemRequest.getQuantity()) < 0) {
-                log.error("Not enough stock for product: {}. Requested: {}, Available: {}", product.getName(), itemRequest.getQuantity(), product.getStockQuantity());
-                throw new RuntimeException("Not enough stock for product: " + product.getName());
-            }
-
-            product.setStockQuantity(product.getStockQuantity().subtract(itemRequest.getQuantity()));
-            productRepository.save(product);
+            // Decrease stock using InventoryService
+            inventoryService.decreaseStock(product.getId(), itemRequest.getQuantity(), "SALE", savedSale.getId());
 
             SaleItem saleItem = new SaleItem();
             saleItem.setProduct(product);
             saleItem.setQuantity(itemRequest.getQuantity());
             saleItem.setUnitPrice(itemRequest.getPrice());
             saleItem.setTotalPrice(itemRequest.getPrice().multiply(itemRequest.getQuantity()));
-            saleItem.setSale(sale);
+            saleItem.setSale(savedSale);
 
             saleItems.add(saleItem);
             totalAmount = totalAmount.add(saleItem.getTotalPrice());
         }
 
-        sale.setTotalAmount(totalAmount);
-        Sale savedSale = saleRepository.save(sale);
+        savedSale.setTotalAmount(totalAmount);
         saleItemRepository.saveAll(saleItems);
         log.info("Sale created successfully with id: {}", savedSale.getId());
 
-        if ("Credit".equalsIgnoreCase(sale.getPaymentMethod()) && sale.getCustomer() != null) {
-            Customer customer = sale.getCustomer();
+        if ("Credit".equalsIgnoreCase(savedSale.getPaymentMethod()) && savedSale.getCustomer() != null) {
+            Customer customer = savedSale.getCustomer();
             customer.setCurrentDebt(customer.getCurrentDebt().add(totalAmount));
             customerRepository.save(customer);
             log.info("Customer debt updated for customer: {}", customer.getId());
@@ -102,5 +109,15 @@ public class SaleService {
         }
 
         return savedSale;
+    }
+
+
+    private Optional<User> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return Optional.empty();
+        }
+        String username = authentication.getName();
+        return userRepository.findByUsername(username);
     }
 }

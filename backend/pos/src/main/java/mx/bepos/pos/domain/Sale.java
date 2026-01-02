@@ -38,4 +38,8 @@ public class Sale {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cash_register_id")
+    private CashRegisterClosure cashRegister;
 }

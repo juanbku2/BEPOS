@@ -32,12 +32,6 @@ public class Product {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal salePrice;
 
-    @Column(precision = 10, scale = 3)
-    private BigDecimal stockQuantity;
-
-    @Column(precision = 10, scale = 3)
-    private BigDecimal minStockAlert;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     @Builder.Default
@@ -46,4 +40,7 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id")
     private Supplier supplier;
+
+    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    private Inventory inventory;
 }

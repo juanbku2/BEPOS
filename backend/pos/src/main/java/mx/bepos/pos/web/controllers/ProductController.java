@@ -1,12 +1,14 @@
 package mx.bepos.pos.web.controllers;
 
 import lombok.RequiredArgsConstructor;
+import mx.bepos.pos.domain.Inventory;
 import mx.bepos.pos.domain.Product;
 import mx.bepos.pos.services.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import mx.bepos.pos.web.dto.ProductRequest;
 
+import java.math.BigDecimal;
 import java.util.List;
 import mx.bepos.pos.domain.UnitOfMeasure;
 
@@ -46,9 +48,14 @@ public class ProductController {
         product.setBarcode(productRequest.getBarcode());
         product.setPurchasePrice(productRequest.getPurchasePrice());
         product.setSalePrice(productRequest.getSalePrice());
-        product.setStockQuantity(productRequest.getStockQuantity());
-        product.setMinStockAlert(productRequest.getMinStockAlert());
         product.setUnitOfMeasure(productRequest.getUnitOfMeasure() != null ? UnitOfMeasure.valueOf(productRequest.getUnitOfMeasure()) : UnitOfMeasure.UNIT);
+
+        Inventory inventory = new Inventory();
+        inventory.setProduct(product);
+        inventory.setQuantity(productRequest.getStockQuantity() != null ? productRequest.getStockQuantity() : BigDecimal.ZERO);
+        inventory.setMinStockAlert(productRequest.getMinStockAlert() != null ? productRequest.getMinStockAlert() : BigDecimal.ZERO);
+        product.setInventory(inventory);
+
         if (productRequest.getSupplierId() != null) {
             productService.getSupplierById(productRequest.getSupplierId())
                     .ifPresent(product::setSupplier);
@@ -64,9 +71,16 @@ public class ProductController {
                     product.setBarcode(productRequest.getBarcode());
                     product.setPurchasePrice(productRequest.getPurchasePrice());
                     product.setSalePrice(productRequest.getSalePrice());
-                    product.setStockQuantity(productRequest.getStockQuantity());
-                    product.setMinStockAlert(productRequest.getMinStockAlert());
                     product.setUnitOfMeasure(productRequest.getUnitOfMeasure() != null ? UnitOfMeasure.valueOf(productRequest.getUnitOfMeasure()) : UnitOfMeasure.UNIT);
+
+                    Inventory inventory = product.getInventory();
+                    if (inventory == null) {
+                        inventory = new Inventory();
+                        inventory.setProduct(product);
+                        product.setInventory(inventory);
+                    }
+                    inventory.setQuantity(productRequest.getStockQuantity() != null ? productRequest.getStockQuantity() : BigDecimal.ZERO);
+                    inventory.setMinStockAlert(productRequest.getMinStockAlert() != null ? productRequest.getMinStockAlert() : BigDecimal.ZERO);
 
                     if (productRequest.getSupplierId() != null) {
                         productService.getSupplierById(productRequest.getSupplierId())
