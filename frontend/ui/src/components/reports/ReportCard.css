@@ -1,0 +1,81 @@
+.report-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    border-left: 5px solid var(--bm-gray-300); /* Default accent */
+}
+
+.report-card:hover:not(.disabled) {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.report-card h3 {
+    font-size: 1.5rem;
+    color: var(--text-color-dark);
+    margin-bottom: 0.75rem;
+}
+
+.report-card p {
+    font-size: 1rem;
+    color: var(--text-color-light);
+    line-height: 1.5;
+}
+
+.report-card.priority {
+    border-left-color: var(--bm-purple); /* Priority accent color */
+}
+
+.report-card.large {
+    grid-column: span 1;
+    grid-row: span 1;
+    /* We can make it span more if needed in a 2-column layout */
+}
+
+/* On wider screens, make the large card stand out more if the grid supports it */
+@media (min-width: 992px) {
+    .reports-grid .report-card.large {
+        grid-column: span 2; /* Span two columns on large screens */
+    }
+}
+
+
+.report-card.disabled {
+    cursor: not-allowed;
+    background-color: var(--bm-gray-100);
+}
+
+.report-card.disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.disabled-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-color-light);
+    backdrop-filter: blur(2px);
+}
+
+.disabled-overlay span {
+    margin-top: 0.5rem;
+    font-weight: 500;
+}

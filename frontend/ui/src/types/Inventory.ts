@@ -1,8 +1,10 @@
+export type MovementType = 'INITIAL_STOCK' | 'SALE' | 'RESTOCK' | 'MANUAL_ADJUSTMENT' | 'LOSS' | 'RETURN';
+
 export interface InventoryMovement {
     id: number;
     productName: string;
     userName: string;
-    type: 'INITIAL' | 'RESTOCK' | 'SALE' | 'MANUAL_ADJUSTMENT' | 'LOSS' | 'RETURN';
+    type: MovementType;
     quantity: number;
     reason?: string;
     date: string;

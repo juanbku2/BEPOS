@@ -233,7 +233,8 @@
   "moduleSelector": {
     "title": "Select a Module",
     "posSubtitle": "Point of Sale",
-    "invoiceSubtitle": "Invoicing"
+    "invoiceSubtitle": "Invoicing",
+    "reportsSubtitle": "Reports"
   },
   "invoice": {
     "generateInvoice": "Generate Invoice",
@@ -257,5 +258,62 @@
     "totalAmount": "Total Amount",
     "invoiceList": "Invoice List",
     "tableContentPlaceholder": "Invoice table content here..."
+  },
+  "reports": {
+    "hub": {
+      "title": "Reports",
+      "subtitle": "Business consultation and control"
+    },
+    "corte": {
+      "title": "Cash Register Closure",
+      "description": "Opening, closing, and summary of the cash register",
+      "openSubtitle": "Current cash register summary",
+      "closeButton": "Close Register",
+      "lastClosureTitle": "Last Cash Register Closure",
+      "noData": "No closure data available.",
+      "filterTitle": "Showing current or last closure."
+    },
+    "filters": {
+      "startDate": "From",
+      "endDate": "To",
+      "apply": "Filter"
+    },
+    "ventas": {
+      "title": "Sales",
+      "description": "Sales reports by date, product, and cashier",
+      "sub": {
+        "porFecha": "By Date",
+        "porProducto": "By Product",
+        "porCajero": "By Cashier",
+        "porFormaDePago": "By Payment Method"
+      },
+      "headers": {
+        "date": "Date",
+        "tickets": "No. Tickets",
+        "totalSales": "Total Sales",
+        "productName": "Product",
+        "totalQuantity": "Total Quantity",
+        "totalRevenue": "Total Revenue",
+        "cashier": "Cashier",
+        "totalAmount": "Total Amount",
+        "paymentMethod": "Payment Method"
+      }
+    },
+    "inventario": {
+      "title": "Inventory",
+      "description": "Current status and inventory movements"
+    },
+    "caja": {
+      "title": "Cash Box",
+      "description": "Cash movements (ins and outs)"
+    },
+    "clientes": {
+      "title": "Customers",
+      "description": "Purchase history and balances"
+    },
+    "avanzados": {
+      "title": "Advanced",
+      "description": "Consolidated reports and statistics"
+    }
   }
 }

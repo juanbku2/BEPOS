@@ -1,20 +1,15 @@
 import { useCashRegister } from '../context/CashRegisterContext';
-import { Alert, Dropdown } from 'react-bootstrap'; // Import Dropdown for theme switcher in footer
+import { Alert, Dropdown } from 'react-bootstrap';
 import { useState } from 'react';
 import { Container, Row, Col, Form, Table, Button, Modal, Card, InputGroup } from 'react-bootstrap';
-import instance from '../api/axios'; // Import the configured axios instance
+import instance from '../api/axios';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
 // Import Components
 import AppSidebar from './AppSidebar';
-import TopNavbar from './TopNavbar'; // Import the new TopNavbar
 import ProductSearch from './ProductSearch';
 import CustomerSearch from './CustomerSearch';
 import Checkout from './Checkout';
-import LastSales from './LastSales';
-import SupplierComponent from './Supplier';
-import UserComponent from './User';
-import ProductComponent from './Product';
-import CustomerComponent from './Customer';
 import InvoiceModal from './InvoiceModal';
 import { CashRegisterControl } from './CashRegisterControl';
 
@@ -22,11 +17,11 @@ import { CashRegisterControl } from './CashRegisterControl';
 import { Product } from '../types/Product';
 import { Customer } from '../types/Customer';
 import { SaleItem } from '../types/SaleItem';
-import { Sale } from '../types/Sale'; // Import Sale type
+import { Sale } from '../types/Sale';
 
 // Import Styling & Translation
 import { useTranslation } from 'react-i18next';
-import '../App.css'; // Main app styles
+import '../App.css';
 
 
 interface DashboardProps {
@@ -37,70 +32,66 @@ interface DashboardProps {
 
 const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     const { t } = useTranslation();
-    const { status: cashRegisterStatus } = useCashRegister();
-    const isCashRegisterClosed = cashRegisterStatus === 'CLOSED';
-    const [currentView, setCurrentView] = useState('pos');
-
-
-    // POS-specific states
-    const [barcode, setBarcode] = useState('');
-    const [items, setItems] = useState<SaleItem<Product>[]>([]);
-    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-    const [editingQuantity, setEditingQuantity] = useState<{ [key: number]: string }>({});
+    const navigate = useNavigate();
+    const location = useLocation();
     
-    // Modal states
-    const [showProductSearch, setShowProductSearch] = useState(false);
-    const [showCustomerSearch, setShowCustomerSearch] = useState(false);
-    const [showCheckout, setShowCheckout] = useState(false);
-    const [checkoutTotal, setCheckoutTotal] = useState(0);
-
-    // Invoice Modal states
-    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-    const [selectedSaleToInvoice, setSelectedSaleToInvoice] = useState<Sale | null>(null);
-    
-    // Key for re-rendering sales component
-    const [lastSalesKey, setLastSalesKey] = useState(0);
-
-    // --- Sidebar Nav Items for POS ---
     const posNavItems = [
-        { key: 'pos', icon: '🛒', label: t('dashboard.posScreen'), onClick: () => setCurrentView('pos'), active: currentView === 'pos' },
-        { key: 'products', icon: '📦', label: t('dashboard.products'), onClick: () => setCurrentView('products'), active: currentView === 'products' },
-        { key: 'customers', icon: '👥', label: t('dashboard.customers'), onClick: () => setCurrentView('customers'), active: currentView === 'customers' },
-        { key: 'reports', icon: '📈', label: t('dashboard.reports'), onClick: () => setCurrentView('sales'), active: currentView === 'sales' }, // Using 'sales' for reports
-        { key: 'suppliers', icon: '🚚', label: t('dashboard.suppliers'), onClick: () => setCurrentView('suppliers'), active: currentView === 'suppliers' },
-        { key: 'users', icon: '👨‍💼', label: t('dashboard.users'), onClick: () => setCurrentView('users'), active: currentView === 'users' },
+        { key: 'pos', icon: '🛒', label: t('dashboard.posScreen'), onClick: () => navigate('/pos'), active: location.pathname === '/pos' },
+        { key: 'products', icon: '📦', label: t('dashboard.products'), onClick: () => navigate('/pos/products'), active: location.pathname.startsWith('/pos/products') },
+        { key: 'customers', icon: '👥', label: t('dashboard.customers'), onClick: () => navigate('/pos/customers'), active: location.pathname.startsWith('/pos/customers') },
+        { key: 'reports', icon: '📈', label: t('dashboard.reports'), onClick: () => navigate('/reports'), active: location.pathname.startsWith('/reports') },
+        { key: 'suppliers', icon: '🚚', label: t('dashboard.suppliers'), onClick: () => navigate('/pos/suppliers'), active: location.pathname.startsWith('/pos/suppliers') },
+        { key: 'users', icon: '👨‍💼', label: t('dashboard.users'), onClick: () => navigate('/pos/users'), active: location.pathname.startsWith('/pos/users') },
     ];
 
-    // --- POS Sidebar Footer Content ---
     const posFooterContent = (
       <>
         <CashRegisterControl />
       </>
     );
 
+    return (
+        <>
+            <AppSidebar
+                title=""
+                bgColor="var(--bm-green)"
+                navItems={posNavItems}
+                onLogout={onLogout}
+                theme={theme}
+                setTheme={setTheme}
+                footerContent={posFooterContent}
+            />
+            <div className="content">
+                <Outlet />
+            </div>
+        </>
+    );
+};
 
-    // --- Invoice Modal Handlers ---
-    const handleShowInvoiceModal = (sale: Sale) => {
-      setSelectedSaleToInvoice(sale);
-      setShowInvoiceModal(true);
-    };
+export const PosView = () => {
+    const { t } = useTranslation();
+    const { status: cashRegisterStatus } = useCashRegister();
+    const isCashRegisterClosed = cashRegisterStatus === 'CLOSED';
+    
+    const [barcode, setBarcode] = useState('');
+    const [items, setItems] = useState<SaleItem<Product>[]>([]);
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [editingQuantity, setEditingQuantity] = useState<{ [key: number]: string }>({});
+    
+    const [showProductSearch, setShowProductSearch] = useState(false);
+    const [showCustomerSearch, setShowCustomerSearch] = useState(false);
+    const [showCheckout, setShowCheckout] = useState(false);
+    const [checkoutTotal, setCheckoutTotal] = useState(0);
 
-    const handleHideInvoiceModal = () => {
-      setShowInvoiceModal(false);
-      setSelectedSaleToInvoice(null);
-    };
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+    const [selectedSaleToInvoice, setSelectedSaleToInvoice] = useState<Sale | null>(null);
+    
+    const [lastSalesKey, setLastSalesKey] = useState(0);
 
-    const handleInvoiceSuccess = () => {
-      // Logic to run after successful invoice generation (e.g., refresh sales list)
-      console.log('Invoice generated successfully! Refreshing sales list...');
-      setLastSalesKey(prevKey => prevKey + 1); // Trigger re-render of LastSales
-    };
-
-    // --- Data Handling Functions ---
     const handleBarcodeSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!barcode || isCashRegisterClosed) return;
-        instance.get(`/products/barcode/${barcode}`) // Use instance and remove /api/v1
+        instance.get(`/products/barcode/${barcode}`)
             .then(response => addProductToCart(response.data))
             .catch(error => console.error(`Error fetching product with barcode ${barcode}:`, error));
         setBarcode('');
@@ -121,46 +112,19 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     const handleQuantityChange = (productId: number, newQuantity: number) => {
         setItems(currentItems => {
             if (newQuantity > 0) {
-                const updatedItems = currentItems.map(item =>
+                return currentItems.map(item =>
                     item.product.id === productId ? { ...item, quantity: newQuantity } : item
                 );
-                // If item not found, it means it was a new item from a step change, add it.
-                if (!updatedItems.find(item => item.product.id === productId)) {
-                    const originalItem = items.find(item => item.product.id === productId);
-                    if(originalItem) {
-                        return [...updatedItems, { ...originalItem, quantity: newQuantity }];
-                    }
-                }
-                return updatedItems;
             } else {
                 return currentItems.filter(item => item.product.id !== productId);
             }
         });
     };
-    
-    const handleStepChange = (item: SaleItem<Product>, step: number) => {
-        const currentValueStr = editingQuantity[item.product.id];
-        let currentQuantity: number;
 
-        if (currentValueStr !== undefined) {
-            currentQuantity = item.product.unitOfMeasure === 'UNIT' ? parseInt(currentValueStr, 10) : parseFloat(currentValueStr);
-            if (isNaN(currentQuantity)) {
-                currentQuantity = item.quantity;
-            }
-        } else {
-            currentQuantity = item.quantity;
-        }
-
+     const handleStepChange = (item: SaleItem<Product>, step: number) => {
+        const currentQuantity = items.find(i => i.product.id === item.product.id)?.quantity || 0;
         const newQuantity = currentQuantity + step;
         handleQuantityChange(item.product.id, newQuantity);
-
-        // After a step change, we clear the editing state for that item
-        // to show the newly calculated quantity.
-        setEditingQuantity(prev => {
-            const newState = { ...prev };
-            delete newState[item.product.id];
-            return newState;
-        });
     };
 
     const handleQuantityBlur = (item: SaleItem<Product>) => {
@@ -181,23 +145,7 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
     };
 
     const handleOpenCheckout = () => {
-        const newItems = items.map(item => {
-            const editedValue = editingQuantity[item.product.id];
-            if (editedValue !== undefined) {
-                const newQuantity = item.product.unitOfMeasure === 'UNIT' ? parseInt(editedValue, 10) : parseFloat(editedValue);
-                if (!isNaN(newQuantity) && newQuantity > 0) {
-                    return { ...item, quantity: newQuantity };
-                } else {
-                    return { ...item, quantity: 0 };
-                }
-            }
-            return item;
-        }).filter(item => item.quantity > 0);
-
-        setItems(newItems);
-        setEditingQuantity({});
-
-        const newTotal = newItems.reduce((total, item) => total + item.product.salePrice * item.quantity, 0);
+        const newTotal = items.reduce((total, item) => total + item.product.salePrice * item.quantity, 0);
         setCheckoutTotal(newTotal);
         setShowCheckout(true);
     };
@@ -208,21 +156,15 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
         setShowCheckout(false);
         setLastSalesKey(prevKey => prevKey + 1);
     };
-    
-    const renderPosView = () => (
+
+    return (
         <>
-
-
-            {isCashRegisterClosed && (
-                <Alert variant="warning">
-                    {t('cashRegister.closedMessage')}
-                </Alert>
-            )}
+            {isCashRegisterClosed && <Alert variant="warning">{t('cashRegister.closedMessage')}</Alert>}
             <p>Escanea o introduce el código de barras</p>
             <Row>
                 <Col xs={12} md={7} lg={8}>
                     <Form onSubmit={handleBarcodeSubmit} className="mb-3">
-                        <InputGroup>
+                         <InputGroup>
                             <InputGroup.Text>
                                 <span className="barcode-icon" />
                             </InputGroup.Text>
@@ -232,7 +174,6 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
                     <div className="d-flex gap-2 mb-3">
                         <Button variant="primary" onClick={() => setShowProductSearch(true)} disabled={isCashRegisterClosed}>{t('dashboard.searchProduct')}</Button>
                         <Button variant="info" onClick={() => setShowCustomerSearch(true)} disabled={isCashRegisterClosed}>{t('dashboard.searchCustomer')}</Button>
-                        <Button variant="secondary" onClick={() => setCurrentView('sales')}>{t('dashboard.reports')}</Button>
                     </div>
                     <Table striped bordered hover responsive>
                         <thead>
@@ -276,49 +217,10 @@ const Dashboard = ({ onLogout, theme, setTheme }: DashboardProps) => {
                     </Card>
                 </Col>
             </Row>
-        </>
-    );
 
-    const renderCurrentView = () => {
-        switch (currentView) {
-            case 'pos': return renderPosView();
-            case 'products': return <ProductComponent />;
-            case 'customers': return <CustomerComponent />;
-            case 'suppliers': return <SupplierComponent />;
-            case 'sales': return <LastSales key={lastSalesKey} onInvoiceSale={handleShowInvoiceModal} />;
-            case 'users': return <UserComponent />;
-            default: return renderPosView();
-        }
-    };
-
-    return (
-        <>
-            <AppSidebar
-                title=""
-                bgColor="var(--bm-green)"
-                navItems={posNavItems}
-                onLogout={onLogout}
-                theme={theme}
-                setTheme={setTheme}
-                footerContent={posFooterContent}
-            />
-            <div className="content"> {/* Changed from content-container */}
-                {renderCurrentView()}
-            </div>
-
-            
-            {/* Modals for POS view */}
             <Modal show={showProductSearch} onHide={() => setShowProductSearch(false)} size="lg"><Modal.Header closeButton><Modal.Title>{t('dashboard.searchProduct')}</Modal.Title></Modal.Header><Modal.Body><ProductSearch onAddProduct={(p) => { addProductToCart(p, p.unitOfMeasure === 'UNIT' ? 1 : 0.5); setShowProductSearch(false); }} /></Modal.Body></Modal>
             <Modal show={showCustomerSearch} onHide={() => setShowCustomerSearch(false)} size="lg"><Modal.Header closeButton><Modal.Title>{t('dashboard.searchCustomer')}</Modal.Title></Modal.Header><Modal.Body><CustomerSearch onSelectCustomer={(c) => { setSelectedCustomer(c); setShowCustomerSearch(false); }} /></Modal.Body></Modal>
             <Modal show={showCheckout} onHide={() => setShowCheckout(false)}><Modal.Header closeButton><Modal.Title>{t('dashboard.checkout')}</Modal.Title></Modal.Header><Modal.Body><Checkout items={items.map(it => ({ productId: it.product.id, quantity: it.quantity, price: it.product.salePrice }))} customer={selectedCustomer} total={checkoutTotal} onSaleComplete={handleSaleComplete} /></Modal.Body></Modal>
-
-            {/* Invoice Modal */}
-            <InvoiceModal
-              show={showInvoiceModal}
-              onHide={handleHideInvoiceModal}
-              sale={selectedSaleToInvoice}
-              onInvoiceSuccess={handleInvoiceSuccess}
-            />
         </>
     );
 };

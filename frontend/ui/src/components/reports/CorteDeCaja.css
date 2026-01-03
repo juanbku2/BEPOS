@@ -1,0 +1,49 @@
+.corte-de-caja-content .lead {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.2rem;
+    color: var(--text-color-light);
+}
+
+.summary-card {
+    text-align: center;
+    border: none;
+    background-color: #f8f9fa;
+    margin-bottom: 1rem;
+}
+
+.summary-card .card-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color-light);
+    margin-bottom: 0.5rem;
+}
+
+.summary-card .card-text {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color-dark);
+}
+
+.status-open {
+    color: green;
+    font-weight: bold;
+}
+
+.status-closed {
+    color: red;
+    font-weight: bold;
+}
+
+.closure-financials p {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.closure-financials p span {
+    color: var(--text-color-light);
+}

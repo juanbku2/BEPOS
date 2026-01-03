@@ -2,8 +2,19 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import LoginScreen from './components/LoginScreen';
 import ModuleSelector from './components/ModuleSelector';
-import Dashboard from './components/Dashboard';
+import Dashboard, { PosView } from './components/Dashboard';
 import InvoicePage from './components/InvoicePage';
+import ReportsHub from './components/ReportsHub';
+import CorteDeCaja from './components/reports/CorteDeCaja';
+import VentasReports from './components/reports/VentasReports';
+import InventarioReports from './components/reports/InventarioReports';
+import CajaReports from './components/reports/CajaReports';
+import ClientesReports from './components/reports/ClientesReports';
+import AvanzadosReports from './components/reports/AvanzadosReports';
+import ProductComponent from './components/Product';
+import CustomerComponent from './components/Customer';
+import SupplierComponent from './components/Supplier';
+import UserComponent from './components/User';
 import TopNavbar from './components/TopNavbar';
 import { useTranslation } from 'react-i18next';
 import { ToastContainer } from 'react-toastify';
@@ -18,8 +29,8 @@ import ForbiddenModal from './components/ForbiddenModal';
 // Component to setup interceptors once
 const AxiosInterceptorSetup = () => {
   const navigate = useNavigate();
-  const { setConnectivityError, setForbiddenModal, setAuthMessage, setLastVisitedRoute } = useError(); // Destructure setLastVisitedRoute
-  const location = useLocation(); // Use useLocation to get current path
+  const { setConnectivityError, setForbiddenModal, setAuthMessage, setLastVisitedRoute } = useError();
+  const location = useLocation();
 
   useEffect(() => {
     setupAxiosInterceptors(setConnectivityError, setForbiddenModal, navigate, setAuthMessage, setLastVisitedRoute, location.pathname);
@@ -38,7 +49,7 @@ function AppContent() {
   const [theme, setTheme] = useState(localStorage.getItem('app-theme') || 'theme-fresh');
   const navigate = useNavigate();
   const location = useLocation();
-  const { isConnectivityError, showForbiddenModal, authMessage, setAuthMessage, lastVisitedRoute, setLastVisitedRoute } = useError(); // Get all error context states
+  const { isConnectivityError, showForbiddenModal, authMessage, setAuthMessage, lastVisitedRoute, setLastVisitedRoute } = useError();
 
   const handleSetTheme = (selectedTheme: string) => {
     setTheme(selectedTheme);
@@ -61,14 +72,11 @@ function AppContent() {
     };
   }, [theme]);
 
-  // Handle 401 redirect after login, check for last visited route
   useEffect(() => {
     if (token && lastVisitedRoute) {
       navigate(lastVisitedRoute);
-      setLastVisitedRoute(null); // Clear stored route after navigation
+      setLastVisitedRoute(null);
     } else if (!token && location.pathname !== '/login') {
-      // If token is lost and not on login page, clear any stored route
-      // This prevents redirecting to a protected route after an explicit logout
       setLastVisitedRoute(null);
     }
   }, [token, lastVisitedRoute, navigate, location.pathname, setLastVisitedRoute]);
@@ -79,13 +87,13 @@ function AppContent() {
     localStorage.removeItem('user');
     setToken(null);
     setCurrentUser(null);
-    setLastVisitedRoute(null); // Ensure no old route is kept
-    setAuthMessage(null); // Clear any authentication message on logout
+    setLastVisitedRoute(null);
+    setAuthMessage(null);
     navigate('/login');
   };
 
   const getAppName = () => {
-    if (location.pathname.startsWith('/pos')) {
+    if (location.pathname.startsWith('/pos') || location.pathname.startsWith('/reports')) {
       return `BM - ${t('moduleSelector.posSubtitle')}`;
     } else if (location.pathname.startsWith('/invoice')) {
       return `BM - ${t('moduleSelector.invoiceSubtitle')}`;
@@ -93,65 +101,67 @@ function AppContent() {
     return 'BM POS';
   };
 
-  const getModuleName = () => {
-    if (location.pathname.startsWith('/pos')) {
-      return '';
+  const getModuleInfo = () => {
+    if (location.pathname.startsWith('/pos') || location.pathname.startsWith('/reports')) {
+      return {
+        name: '',
+        displayName: t('moduleSelector.posSubtitle'),
+        bgColor: 'var(--bm-green)'
+      };
     } else if (location.pathname.startsWith('/invoice')) {
-      return '';
+      return {
+        name: '',
+        displayName: t('moduleSelector.invoiceSubtitle'),
+        bgColor: 'var(--bm-blue)'
+      };
     } else if (location.pathname === '/select-module') {
-      return t('moduleSelector.title');
+      return { name: t('moduleSelector.title'), displayName: '', bgColor: '' };
     }
-    return '';
+    return { name: '', displayName: '', bgColor: '' };
   };
+
+  const moduleInfo = getModuleInfo();
+  const showMainLayout = token && (location.pathname.startsWith('/pos') || location.pathname.startsWith('/invoice') || location.pathname.startsWith('/reports'));
 
   return (
     <>
       <AxiosInterceptorSetup />
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnHover={false}
-      />
-
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnHover={false} />
       {isConnectivityError && <ConnectivityOverlay />}
       {showForbiddenModal && <ForbiddenModal isOpen={showForbiddenModal} onClose={() => setForbiddenModal(false)} message={authMessage} />}
 
-      {token && (location.pathname.startsWith('/pos') || location.pathname.startsWith('/invoice')) && (
+      {showMainLayout && (
         <TopNavbar
           onLogout={handleLogout}
           userRole={currentUser?.role}
           userName={currentUser?.firstName && currentUser?.lastName ? `${currentUser.firstName} ${currentUser.lastName}` : currentUser?.username}
           appName={getAppName()}
-          moduleName={getModuleName()}
-          bgColor={location.pathname.startsWith('/pos') ? 'var(--bm-green)' : 'var(--bm-blue)'}
-          currentModuleDisplayName={location.pathname.startsWith('/pos') ? t('moduleSelector.posSubtitle') : (location.pathname.startsWith('/invoice') ? t('moduleSelector.invoiceSubtitle') : '')}
+          moduleName={moduleInfo.name}
+          bgColor={moduleInfo.bgColor}
+          currentModuleDisplayName={moduleInfo.displayName}
         />
       )}
 
-      {token && (location.pathname.startsWith('/pos') || location.pathname.startsWith('/invoice')) ? (
+      {showMainLayout ? (
         <div className="app-layout">
           <Routes>
-            <Route
-              path="/pos"
-              element={
-                <Dashboard
-                  onLogout={handleLogout}
-                  theme={theme}
-                  setTheme={handleSetTheme}
-                />
-              }
-            />
-            <Route
-              path="/invoice"
-              element={
-                <InvoicePage
-                  onLogout={handleLogout}
-                />
-              }
-            />
+            <Route element={<Dashboard onLogout={handleLogout} theme={theme} setTheme={handleSetTheme} />}>
+              <Route path="/pos" element={<PosView />} />
+              <Route path="/pos/products" element={<ProductComponent />} />
+              <Route path="/pos/customers" element={<CustomerComponent />} />
+              <Route path="/pos/suppliers" element={<SupplierComponent />} />
+              <Route path="/pos/users" element={<UserComponent />} />
+              <Route path="/reports" element={<ReportsHub />} />
+              <Route path="/reports/corte-caja" element={<CorteDeCaja />} />
+              <Route path="/reports/ventas/*" element={<VentasReports />} />
+              <Route path="/reports/inventario" element={<InventarioReports />} />
+              <Route path="/reports/caja" element={<CajaReports />} />
+              <Route path="/reports/clientes" element={<ClientesReports />} />
+              <Route path="/reports/avanzados" element={<AvanzadosReports />} />
+            </Route>
+            
+            <Route path="/invoice" element={<InvoicePage onLogout={handleLogout} />} />
+
           </Routes>
         </div>
       ) : (
@@ -159,6 +169,7 @@ function AppContent() {
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/select-module" element={token ? <ModuleSelector /> : <Navigate to="/login" />} />
           <Route path="/" element={token ? <Navigate to="/select-module" /> : <Navigate to="/login" />} />
+          <Route path="*" element={token ? <Navigate to="/select-module" /> : <Navigate to="/login" />} />
         </Routes>
       )}
     </>

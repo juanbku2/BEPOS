@@ -1,0 +1,22 @@
+.ventas-reports-container {
+    height: 100%;
+}
+
+.ventas-tabs .nav-link {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-color-light);
+}
+
+.ventas-tabs .nav-link.active {
+    color: var(--bm-purple);
+    border-color: var(--bm-purple);
+    border-bottom-width: 3px;
+}
+
+.ventas-reports-content {
+    padding: 1rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}

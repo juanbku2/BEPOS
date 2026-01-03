@@ -233,7 +233,8 @@
   "moduleSelector": {
     "title": "Selecciona un módulo",
     "posSubtitle": "Punto de Venta",
-    "invoiceSubtitle": "Facturación"
+    "invoiceSubtitle": "Facturación",
+    "reportsSubtitle": "Reportes"
   },
   "invoice": {
     "generateInvoice": "Generar Factura",
@@ -257,5 +258,61 @@
     "totalAmount": "Monto Total",
     "invoiceList": "Lista de Facturas",
     "tableContentPlaceholder": "Contenido de la tabla de facturas aquí..."
+  },
+  "reports": {
+    "hub": {
+      "title": "Reportes",
+      "subtitle": "Consulta y control del negocio"
+    },
+    "corte": {
+      "title": "Corte de Caja",
+      "description": "Apertura, cierre y resumen de caja",
+      "openSubtitle": "Resumen de la caja actual",
+      "closeButton": "Cerrar Caja",
+      "lastClosureTitle": "Último Cierre de Caja",
+      "noData": "No hay datos de cierre disponibles.",
+      "filterTitle": "Mostrando cierre actual o último."
+    },
+    "filters": {
+      "startDate": "Desde",
+      "endDate": "Hasta",
+      "apply": "Filtrar"
+    },
+    "ventas": {
+      "title": "Ventas",
+      "description": "Reportes de ventas por fecha, producto y cajero",
+      "sub": {
+        "porFecha": "Por Fecha",
+        "porProducto": "Por Producto",
+        "porCajero": "Por Cajero",
+        "porFormaDePago": "Por Forma de Pago"
+      },
+                              "headers": {
+                                  "date": "Fecha",
+                                  "tickets": "Nº Tickets",
+                                  "totalSales": "Ventas Totales",
+                                  "productName": "Producto",
+                                  "totalQuantity": "Cantidad Total",
+                                  "totalRevenue": "Ingresos Totales",
+                                  "cashier": "Cajero",
+                                  "totalAmount": "Monto Total",
+                                  "paymentMethod": "Forma de Pago"
+                              }    },
+    "inventario": {
+      "title": "Inventario",
+      "description": "Estado actual y movimientos de inventario"
+    },
+    "caja": {
+      "title": "Caja",
+      "description": "Movimientos de efectivo (entradas y salidas)"
+    },
+    "clientes": {
+      "title": "Clientes",
+      "description": "Historial de compras y saldos"
+    },
+    "avanzados": {
+      "title": "Avanzados",
+      "description": "Reportes y estadísticas consolidadas"
+    }
   }
 }

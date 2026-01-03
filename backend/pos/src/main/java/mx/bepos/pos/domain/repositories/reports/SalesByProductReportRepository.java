@@ -11,20 +11,6 @@ import java.util.List;
 
 public interface SalesByProductReportRepository extends Repository<Product, Integer> {
 
-    String SALES_BY_PRODUCT_QUERY = """
-            SELECT
-                p.id as id,
-                p.name as name,
-                SUM(si.quantity) AS totalQuantity,
-                SUM(si.total_price) AS totalRevenue
-            FROM sale_items si
-            JOIN products p ON p.id = si.product_id
-            JOIN sales s ON s.id = si.sale_id
-            WHERE s.sale_date BETWEEN :startDate AND :endDate
-            GROUP BY p.id, p.name
-            ORDER BY totalRevenue DESC
-            """;
-
-    @Query(value = SALES_BY_PRODUCT_QUERY, nativeQuery = true)
+    @Query(name = "Sale.salesByProductReport", nativeQuery = true)
     List<SalesByProductReportDTO> getSalesByProductReport(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 }
