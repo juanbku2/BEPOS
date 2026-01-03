@@ -1,10 +1,53 @@
 package mx.bepos.pos.services;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import mx.bepos.pos.domain.CashMovement;
+import mx.bepos.pos.domain.CashMovementType;
+import mx.bepos.pos.domain.CashRegisterClosure;
+import mx.bepos.pos.domain.User;
+import mx.bepos.pos.domain.repositories.CashMovementRepository;
+import mx.bepos.pos.domain.repositories.UserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
-public interface CashMovementService {
-    CashMovement cashIn(BigDecimal amount, String reason);
-    CashMovement cashOut(BigDecimal amount, String reason);
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class CashMovementService {
+
+    private final CashMovementRepository cashMovementRepository;
+    private final CashRegisterService cashRegisterService;
+    private final UserService userService; // Inject UserService
+
+    @Transactional
+    public CashMovement cashIn(BigDecimal amount, String reason) {
+        return createCashMovement(amount, reason, CashMovementType.IN);
+    }
+
+    @Transactional
+    public CashMovement cashOut(BigDecimal amount, String reason) {
+        return createCashMovement(amount, reason, CashMovementType.OUT);
+    }
+
+    private CashMovement createCashMovement(BigDecimal amount, String reason, CashMovementType type) {
+        CashRegisterClosure openRegister = cashRegisterService.getCurrentCashRegister()
+                .orElseThrow(() -> new IllegalStateException("No open cash register found to record cash movement."));
+        User user = userService.getCurrentUser().orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+
+        CashMovement cashMovement = new CashMovement();
+        cashMovement.setCashRegister(openRegister);
+        cashMovement.setAmount(amount);
+        cashMovement.setReason(reason);
+        cashMovement.setMovementType(type);
+        cashMovement.setCreatedBy(user);
+
+        log.info("Creating cash movement: {} of {} for reason: {}", type, amount, reason);
+        return cashMovementRepository.save(cashMovement);
+    }
 }
