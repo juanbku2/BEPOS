@@ -163,12 +163,17 @@ instance.interceptors.response.use(
   }
 );
 
-export const checkConnectivity = async () => {
+export const checkConnectivity = async (): Promise<boolean> => {
     try {
-        // Ping a simple, unauthenticated endpoint
-        await axios.get('http://localhost:8080/health', { timeout: 3000 }); // Health check endpoint
+        await axios.get('http://localhost:8080/api/v1/health', { timeout: 3000 });
+        if (setGlobalConnectivityError) {
+            setGlobalConnectivityError(false); // Clear error if successful
+        }
         return true;
     } catch (e) {
+        if (setGlobalConnectivityError) {
+            setGlobalConnectivityError(true); // Set error if failed
+        }
         return false;
     }
 }

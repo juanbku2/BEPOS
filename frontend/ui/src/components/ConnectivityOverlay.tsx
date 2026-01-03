@@ -1,10 +1,16 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Spinner } from 'react-bootstrap';
-import './ConnectivityOverlay.css'; // Create this CSS file
+import './ConnectivityOverlay.css';
+import { useError } from '../context/ErrorContext'; // Import useError
 
 const ConnectivityOverlay: React.FC = () => {
   const { t } = useTranslation();
+  const { isConnectivityError } = useError(); // Get isConnectivityError from context
+
+  if (!isConnectivityError) { // Render only if there's a connectivity error
+    return null;
+  }
 
   return (
     <div className="connectivity-overlay">
